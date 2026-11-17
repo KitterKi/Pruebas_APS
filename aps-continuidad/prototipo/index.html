@@ -1,350 +1,450 @@
 <title>APS Continuidad</title>
 <style>
-/* Layout concept: clinical console — sticky tab bar switches between four
-   analysis views; each view is a scrollable single-column stack of cards. */
+/* Layout concept: analytical console (riel de navegación por pregunta a la
+   izquierda + panel principal denso) con voz editorial (un hallazgo, una
+   frase, una cautela en la misma oración) tomada de la dirección
+   "Observatorio". Ver docs/rediseno_ux.md. Sin tarjetas KPI repetidas: los
+   indicadores viven en una franja compacta, no en cajas idénticas. */
 :root{
-  --bg:#f3f5f3; --surface:#ffffff; --surface-2:#eaf0ee; --border:#d7e0dc;
-  --fg:#16211c; --muted:#5b6d66;
-  --accent:#1c6e8c; --accent-fg:#ffffff; --accent-soft:#e3eef2;
-  --accent2:#b5712b;
-  --good:#2e7d4f; --good-soft:#e5f3ea;
-  --warn:#9a6b11; --warn-soft:#f8eed7;
-  --bad:#af3b36; --bad-soft:#fae6e4;
-  --syn:#7a4fb0; --syn-soft:#efe6f7;
+  --bg:#eef0ec; --panel:#ffffff; --panel-2:#f4f5f1; --line:#d7d9d0;
+  --ink:#14181a; --ink-soft:#565b52;
+  --accent:#2c5c5e; --accent-dim:#e1e9e6;
+  --accent2:#8a5a24; --accent2-dim:#f0e5d4;
+  --good:#2f6b45; --good-dim:#e2ebe2;
+  --warn:#8a6a1f; --warn-dim:#f2ead2;
+  --bad:#95342a; --bad-dim:#f3ddd8;
+  --syn:#5b4a7a; --syn-dim:#e9e5f1;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'IBM Plex Sans',Inter,system-ui,-apple-system,sans-serif;
+  --serif:'Source Serif 4',Georgia,serif;
+  /* aliases kept for the rendering script, which still names a few colors
+     by their pre-redesign token names (--border/--fg/--muted/--surface*) */
+  --border:var(--line); --fg:var(--ink); --muted:var(--ink-soft);
+  --surface:var(--panel); --surface-2:var(--panel-2);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#10161a; --surface:#161f24; --surface-2:#1c2830; --border:#2b3a41;
-    --fg:#e8eef0; --muted:#93a7ad;
-    --accent:#4da9c4; --accent-fg:#0b1418; --accent-soft:#1b323c;
-    --accent2:#d4a05c;
-    --good:#5fb583; --good-soft:#163524;
-    --warn:#d4b24f; --warn-soft:#352c14;
-    --bad:#e2756f; --bad-soft:#3a1d1c;
-    --syn:#b394dd; --syn-soft:#2a2240;
+    --bg:#13181a; --panel:#1a2022; --panel-2:#20272a; --line:#343c3e;
+    --ink:#e7ebe6; --ink-soft:#9aa39a;
+    --accent:#6fb0ae; --accent-dim:#223332;
+    --accent2:#d9ab6e; --accent2-dim:#352c1d;
+    --good:#7bc295; --good-dim:#1c2f22;
+    --warn:#dcc077; --warn-dim:#34290f;
+    --bad:#e2897e; --bad-dim:#3a211d;
+    --syn:#b6a6d6; --syn-dim:#2a2438;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#10161a; --surface:#161f24; --surface-2:#1c2830; --border:#2b3a41;
-  --fg:#e8eef0; --muted:#93a7ad;
-  --accent:#4da9c4; --accent-fg:#0b1418; --accent-soft:#1b323c;
-  --accent2:#d4a05c;
-  --good:#5fb583; --good-soft:#163524;
-  --warn:#d4b24f; --warn-soft:#352c14;
-  --bad:#e2756f; --bad-soft:#3a1d1c;
-  --syn:#b394dd; --syn-soft:#2a2240;
+  --bg:#13181a; --panel:#1a2022; --panel-2:#20272a; --line:#343c3e;
+  --ink:#e7ebe6; --ink-soft:#9aa39a;
+  --accent:#6fb0ae; --accent-dim:#223332;
+  --accent2:#d9ab6e; --accent2-dim:#352c1d;
+  --good:#7bc295; --good-dim:#1c2f22;
+  --warn:#dcc077; --warn-dim:#34290f;
+  --bad:#e2897e; --bad-dim:#3a211d;
+  --syn:#b6a6d6; --syn-dim:#2a2438;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{margin:0}
+html,body{margin:0; height:100%}
 body{
-  background:var(--bg); color:var(--fg);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
-  padding-left:max(16px, env(safe-area-inset-left,0px));
-  padding-right:max(16px, env(safe-area-inset-right,0px));
+  background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:14.5px;
+  padding-left:max(0px, env(safe-area-inset-left,0px));
+  padding-right:max(0px, env(safe-area-inset-right,0px));
 }
-h1,h2,h3,.disp{font-family:'Space Grotesk','Inter',system-ui,sans-serif; text-wrap:balance}
-.tabular{font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--serif); font-weight:600; text-wrap:balance; margin:0}
+.tabular{font-variant-numeric:tabular-nums; font-family:var(--mono)}
 a{color:var(--accent)}
-.wrap{max-width:980px; margin:0 auto; padding-block:18px 60px}
+code{font-family:var(--mono); font-size:.92em}
 
-/* synthetic data banner */
-.synbar{
-  position:sticky; top:0; z-index:20; margin:0 calc(-1 * max(16px, env(safe-area-inset-left,0px))) 0 calc(-1 * max(16px, env(safe-area-inset-right,0px)));
-  background:var(--syn-soft); border-bottom:1px solid var(--syn);
+/* ---------- shell: rail + main ---------- */
+.shell{display:grid; grid-template-columns:238px 1fr; min-height:100vh}
+@media (max-width:860px){.shell{grid-template-columns:1fr}}
+
+.rail{
+  background:var(--panel); border-right:1px solid var(--line);
+  padding:18px 0 24px; position:sticky; top:0; align-self:start; max-height:100vh; overflow-y:auto;
 }
-.synbar-inner{
-  max-width:980px; margin:0 auto; padding:9px max(16px, env(safe-area-inset-left,0px)) 9px max(16px, env(safe-area-inset-right,0px));
-  display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+@media (max-width:860px){.rail{position:static; max-height:none; border-right:none; border-bottom:1px solid var(--line)}}
+.rail .brand{
+  font-family:var(--mono); font-size:.72rem; color:var(--ink-soft); letter-spacing:.02em;
+  padding:0 18px 14px; border-bottom:1px solid var(--line); margin-bottom:8px;
 }
-.synbar b{color:var(--syn); font-family:'Space Grotesk',sans-serif; letter-spacing:.02em}
-.synbar span{color:var(--muted); font-size:.85rem}
-
-header.top{padding-top:20px}
-header.top .eyebrow{color:var(--accent); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; font-weight:600}
-header.top h1{font-size:1.9rem; margin:.25rem 0 .4rem; line-height:1.15}
-header.top p{color:var(--muted); max-width:62ch; margin:0 0 18px; line-height:1.5}
-
-/* tab nav */
-.tabs{
-  display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:20px;
-  overflow-x:auto;
+.rail .brand b{color:var(--ink); font-weight:600}
+.rail .grouplabel{font-size:.68rem; color:var(--ink-soft); padding:16px 18px 5px; font-weight:600}
+.rail nav{display:flex; flex-direction:column}
+.navlink{
+  display:block; padding:7px 18px; color:var(--ink); text-decoration:none; font-size:.87rem;
+  border-left:2px solid transparent; cursor:pointer; background:none; border-top:none; border-right:none; border-bottom:none;
+  font-family:inherit; text-align:left; width:100%;
 }
-.tab{
-  font:inherit; font-family:'Space Grotesk',sans-serif; font-size:.92rem;
-  background:none; border:none; color:var(--muted); cursor:pointer;
-  padding:9px 14px; border-bottom:2px solid transparent; white-space:nowrap;
+.navlink .q{display:block; color:var(--ink-soft); font-size:.73rem; margin-top:1px}
+.navlink[aria-current="true"]{border-left-color:var(--accent); background:var(--accent-dim); font-weight:600}
+.navlink:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+@media (max-width:860px){.rail nav{flex-direction:row; flex-wrap:wrap}.navlink{width:auto; border-left:none; border-bottom:2px solid transparent}.navlink[aria-current="true"]{border-bottom-color:var(--accent)}.navlink .q{display:none}}
+
+.main{padding:0 0 70px}
+.synline{
+  background:var(--syn-dim); border-bottom:1px solid var(--syn); padding:7px 28px;
+  font-size:.78rem; color:var(--ink-soft); display:flex; gap:8px; flex-wrap:wrap; align-items:baseline;
 }
-.tab[aria-selected="true"]{color:var(--accent); border-bottom-color:var(--accent); font-weight:600}
-.tab:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-
-.view{display:flex; flex-direction:column; gap:18px}
-.view[hidden]{display:none}
-
-.card{
-  background:var(--surface); border:1px solid var(--border); border-radius:12px;
-  padding:16px 18px;
+.synline b{color:var(--syn); font-weight:600}
+.topline{
+  padding:18px 28px 14px; border-bottom:1px solid var(--line);
+  display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;
 }
-.card h2{font-size:1.05rem; margin:0 0 4px}
-.card h3.sec{font-size:.88rem; margin:16px 0 6px; color:var(--fg)}
-.card .sub{color:var(--muted); font-size:.85rem; margin:0 0 14px; line-height:1.45}
-.card .note{
-  font-size:.8rem; color:var(--muted); background:var(--surface-2); border:1px dashed var(--border);
-  border-radius:8px; padding:9px 11px; line-height:1.5; margin-top:10px;
-}
-.card .note b{color:var(--fg)}
+.topline h1{font-size:1.4rem}
+.topline .meta{font-family:var(--mono); font-size:.72rem; color:var(--ink-soft); white-space:nowrap}
+.content{padding:22px 28px 10px; max-width:1180px}
 
-.kpi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px}
-.kpi{
-  background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
-  padding:12px 14px; display:flex; flex-direction:column; gap:4px; min-width:0;
-}
-.kpi .label{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
-.kpi .value{font-family:'Space Grotesk',sans-serif; font-size:1.7rem; line-height:1}
-.kpi .delta{font-size:.78rem}
-.kpi .delta.good{color:var(--good)} .kpi .delta.bad{color:var(--bad)} .kpi .delta.warn{color:var(--warn)}
-.kpi .def{font-size:.68rem; color:var(--muted); line-height:1.3}
+/* ---------- editorial section pattern: finding + caption in prose ---------- */
+.section{margin-bottom:34px}
+.section .q{font-size:.76rem; color:var(--accent); font-weight:600; margin-bottom:3px}
+.section h2{font-size:1.2rem; margin-bottom:8px; max-width:34ch}
+.section .lede{font-size:.92rem; color:#30332e; line-height:1.6; max-width:68ch; margin-bottom:16px}
+:root[data-theme="dark"] .section .lede{color:#cfd6cd}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .section .lede{color:#cfd6cd}}
+.section .caveat{font-size:.82rem; color:var(--ink-soft); line-height:1.55; max-width:66ch; margin-top:12px; border-left:2px solid var(--accent); padding-left:12px}
+.section .caveat b{color:var(--ink)}
 
-.pill{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:.75rem; font-weight:600; white-space:nowrap}
-.pill.good{background:var(--good-soft); color:var(--good)}
-.pill.warn{background:var(--warn-soft); color:var(--warn)}
-.pill.bad{background:var(--bad-soft); color:var(--bad)}
-.pill.accent{background:var(--accent-soft); color:var(--accent)}
+.panel{background:var(--panel); border:1px solid var(--line)}
+.panel + .panel{margin-top:14px}
+.panel .ph{padding:9px 14px; border-bottom:1px solid var(--line); font-size:.78rem; font-weight:600; color:var(--ink-soft); font-family:var(--mono)}
+.panel .pb{padding:14px}
 
-.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:.78rem; color:var(--muted); margin-top:8px}
-.legend .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle}
+/* ---------- metrics strip (replaces repeated KPI cards) ---------- */
+.mstrip{display:flex; flex-wrap:wrap; border:1px solid var(--line); background:var(--panel)}
+.mcell{flex:1 1 180px; padding:12px 16px; border-right:1px solid var(--line); border-top:1px solid var(--line); min-width:0}
+.mstrip .mcell:nth-child(-n+5){border-top:none}
+.mcell .l{font-size:.68rem; color:var(--ink-soft); line-height:1.3; margin-bottom:5px}
+.mcell .v{font-family:var(--mono); font-size:1.5rem; font-weight:600; line-height:1}
+.mcell .d{font-size:.74rem; margin-top:3px}
+.mcell .d.good{color:var(--good)} .mcell .d.bad{color:var(--bad)} .mcell .d.warn{color:var(--warn)}
+.mcell .def{font-size:.68rem; color:var(--ink-soft); line-height:1.35; margin-top:5px}
+.mcell.hero{flex-basis:260px}
+.mcell.hero .v{font-size:2.1rem}
 
-.foot-source{font-size:.78rem; color:var(--muted); border-top:1px dashed var(--border); margin-top:10px; padding-top:8px; line-height:1.5}
+.pill{display:inline-flex; align-items:center; gap:5px; padding:2px 8px; font-size:.72rem; font-weight:600; white-space:nowrap; font-family:var(--mono); border:1px solid transparent}
+.pill.good{background:var(--good-dim); color:var(--good); border-color:var(--good)}
+.pill.warn{background:var(--warn-dim); color:var(--warn); border-color:var(--warn)}
+.pill.bad{background:var(--bad-dim); color:var(--bad); border-color:var(--bad)}
+.pill.accent{background:var(--accent-dim); color:var(--accent); border-color:var(--accent)}
+.pill.muted{background:var(--panel-2); color:var(--ink-soft); border-color:var(--line)}
 
-/* trayectorias view */
-.traj-layout{display:grid; grid-template-columns:260px 1fr; gap:16px}
+.legend{display:flex; gap:12px; flex-wrap:wrap; font-size:.74rem; color:var(--ink-soft); margin-top:8px}
+.legend .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle}
+
+.foot-source{font-size:.76rem; color:var(--ink-soft); border-top:1px solid var(--line); margin:30px 28px 0; padding:14px 0; line-height:1.5}
+
+/* ---------- trayectorias ---------- */
+.traj-layout{display:grid; grid-template-columns:260px 1fr; gap:14px}
 @media (max-width:760px){.traj-layout{grid-template-columns:1fr}}
 .filters{display:flex; flex-direction:column; gap:8px}
 .filters select, .filters input{
-  font:inherit; background:var(--surface-2); border:1px solid var(--border); color:var(--fg);
-  border-radius:8px; padding:7px 9px; width:100%;
+  font:inherit; font-size:.82rem; background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+  padding:6px 9px; width:100%;
 }
-.patient-list{max-height:420px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; margin-top:8px}
+.patient-list{max-height:460px; overflow-y:auto; border:1px solid var(--line)}
 .patient-row{
   display:flex; justify-content:space-between; gap:8px; align-items:center;
-  padding:8px 10px; border-bottom:1px solid var(--border); cursor:pointer; font-size:.82rem;
+  padding:7px 10px; border-bottom:1px solid var(--line); cursor:pointer; font-size:.8rem;
 }
 .patient-row:last-child{border-bottom:none}
-.patient-row:hover{background:var(--surface-2)}
-.patient-row.active{background:var(--accent-soft)}
-.patient-row .pid{font-family:'Space Grotesk',sans-serif; font-weight:600}
-.patient-row .meta{color:var(--muted); font-size:.74rem}
+.patient-row:hover{background:var(--panel-2)}
+.patient-row.active{background:var(--accent-dim)}
+.patient-row .pid{font-family:var(--mono); font-weight:600; font-size:.8rem}
+.patient-row .meta{color:var(--ink-soft); font-size:.72rem}
 
 .timeline-svg{width:100%; height:auto; display:block}
-.chronology{list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:5px; font-size:.82rem; max-height:220px; overflow-y:auto}
-.chronology li{display:flex; gap:8px; align-items:baseline}
-.chronology .m{color:var(--muted); min-width:52px; font-variant-numeric:tabular-nums}
+.chronology{list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:.8rem; max-height:220px; overflow-y:auto}
+.chronology li{display:flex; gap:8px; align-items:baseline; flex-wrap:wrap}
+.chronology .m{color:var(--ink-soft); min-width:50px; font-family:var(--mono); font-size:.76rem}
 
-/* tables (comparison, episodes, assumptions) */
-table.cmp{width:100%; border-collapse:collapse; font-size:.85rem}
-table.cmp th, table.cmp td{text-align:left; padding:7px 8px; border-bottom:1px solid var(--border)}
-table.cmp th{color:var(--muted); font-weight:600; font-size:.74rem; text-transform:uppercase; letter-spacing:.03em}
-table.cmp td.num{font-variant-numeric:tabular-nums; text-align:right}
+/* ---------- tables ---------- */
+table.cmp{width:100%; border-collapse:collapse; font-size:.83rem}
+table.cmp th, table.cmp td{text-align:left; padding:7px 10px; border-bottom:1px solid var(--line)}
+table.cmp th{color:var(--ink-soft); font-weight:600; font-size:.7rem; text-transform:uppercase; letter-spacing:.03em; font-family:var(--sans)}
+table.cmp td.num, table.cmp th.num{font-variant-numeric:tabular-nums; text-align:right}
+table.cmp td.num{font-family:var(--mono)}
 table.cmp tr:last-child td{border-bottom:none}
+table.cmp tbody tr{cursor:default}
+table.cmp tbody tr.linkable{cursor:pointer}
+table.cmp tbody tr.linkable:hover{background:var(--panel-2)}
 
-/* simulator */
+/* ---------- simulator ---------- */
 .sim-controls{display:flex; flex-direction:column; gap:16px}
-.slider-row label{display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:6px}
+.slider-row label{display:flex; justify-content:space-between; font-size:.84rem; margin-bottom:6px}
 .slider-row input[type=range]{width:100%; accent-color:var(--accent)}
-.slider-row .hint{font-size:.74rem; color:var(--muted); margin-top:4px}
-.toggle-row{display:flex; align-items:center; gap:10px; font-size:.88rem}
-.toggle-row input{width:18px; height:18px; accent-color:var(--accent)}
-.sim-compare{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px}
+.slider-row .hint{font-size:.74rem; color:var(--ink-soft); margin-top:4px; max-width:66ch}
+.toggle-row{display:flex; align-items:center; gap:10px; font-size:.86rem}
+.toggle-row input{width:16px; height:16px; accent-color:var(--accent)}
+.sim-compare{display:grid; grid-template-columns:1fr 1fr; gap:0; margin-top:14px; border:1px solid var(--line)}
 @media (max-width:600px){.sim-compare{grid-template-columns:1fr}}
-.sim-box{background:var(--surface-2); border-radius:10px; padding:12px 14px; border:1px solid var(--border)}
-.sim-box h3{margin:0 0 8px; font-size:.82rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; font-weight:600}
-.sim-box .big{font-family:'Space Grotesk',sans-serif; font-size:1.6rem}
-.sim-note{font-size:.78rem; color:var(--muted); margin-top:10px; line-height:1.5}
-.sim-divider{border-top:1px dashed var(--border); margin:16px 0}
+.sim-box{padding:12px 16px; border-right:1px solid var(--line)}
+.sim-box:last-child{border-right:none}
+.sim-box.accent{background:var(--accent-dim)}
+.sim-box h3{margin:0 0 8px; font-size:.74rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; font-weight:600; font-family:var(--sans)}
+.sim-box.accent h3{color:var(--accent)}
+.sim-box .big{font-family:var(--mono); font-size:1.5rem; font-weight:600}
+.sim-note{font-size:.78rem; color:var(--ink-soft); margin-top:10px; line-height:1.5; max-width:70ch}
+.sim-divider{border-top:1px solid var(--line); margin:18px 0}
 
-.src-list{display:flex; flex-direction:column; gap:10px; font-size:.86rem; line-height:1.5}
-.src-list .tag{font-size:.68rem; font-weight:700; padding:2px 7px; border-radius:5px; margin-right:7px; text-transform:uppercase; letter-spacing:.03em}
-.tag.real{background:var(--good-soft); color:var(--good)}
-.tag.syn{background:var(--syn-soft); color:var(--syn)}
+.src-list{display:flex; flex-direction:column; gap:10px; font-size:.85rem; line-height:1.55}
+.src-list .tag{font-size:.66rem; font-weight:700; padding:1px 7px; margin-right:7px; text-transform:uppercase; letter-spacing:.03em; font-family:var(--mono); border:1px solid}
+.tag.real{background:var(--good-dim); color:var(--good); border-color:var(--good)}
+.tag.syn{background:var(--syn-dim); color:var(--syn); border-color:var(--syn)}
+
+/* ---------- transitions heatmap ---------- */
+.heat-wrap{overflow-x:auto}
+.heat-row{display:flex; align-items:center; gap:0; margin-bottom:3px}
+.heat-row .hname{width:170px; flex:none; font-size:.76rem; padding-right:8px; cursor:pointer}
+.heat-row .hname:hover{color:var(--accent)}
+.heat-cells{display:flex; gap:1px; flex:1; min-width:480px}
+.heat-cell{flex:1; height:20px}
+.heat-axis{display:flex; margin:4px 0 0 170px; min-width:480px}
+.heat-axis span{flex:1; font-size:.64rem; color:var(--ink-soft); text-align:left; font-family:var(--mono)}
+.heat-scale{display:flex; align-items:center; gap:8px; font-size:.72rem; color:var(--ink-soft); margin-top:10px}
+.heat-scale .ramp{width:120px; height:10px; background:linear-gradient(90deg, var(--accent-dim), var(--bad))}
 </style>
 
-<div class="synbar"><div class="synbar-inner">
-  <b>⚠ DATOS SINTÉTICOS</b>
-  <span>Este prototipo usa una cohorte de pacientes generada artificialmente para explorar el concepto de continuidad asistencial. Ninguna cifra representa pacientes, establecimientos o estadísticas reales. Las fuentes reales usadas como referencia, y todos los supuestos inyectados por el generador, están en la pestaña "Fuentes".</span>
-</div></div>
+<div class="shell">
+<nav class="rail">
+  <div class="brand"><b>APS Continuidad</b><br>PSCV · hipertensión · cohorte sintética</div>
+  <div class="grouplabel">Explorar</div>
+  <button class="navlink" data-view="general">Visión general<span class="q">¿cuánta pérdida hay, y crece?</span></button>
+  <button class="navlink" data-view="transiciones">Transiciones<span class="q">¿en qué mes ocurre?</span></button>
+  <button class="navlink" data-view="trayectorias">Trayectorias<span class="q">¿cómo es un caso?</span></button>
+  <div class="grouplabel">Comparar</div>
+  <button class="navlink" data-view="cohortes">Cohortes<span class="q">¿quién difiere, y cómo?</span></button>
+  <button class="navlink" data-view="establecimientos">Establecimientos<span class="q">¿el sistema o el centro?</span></button>
+  <div class="grouplabel">Interpretar</div>
+  <button class="navlink" data-view="simulador">Simulador<span class="q">¿y si cambiara X?</span></button>
+  <button class="navlink" data-view="fuentes">Supuestos y fuentes<span class="q">¿qué de esto es real?</span></button>
+</nav>
+<div class="main">
+  <div class="synline"><b>Datos sintéticos.</b><span>Cohorte generada artificialmente; ninguna cifra describe pacientes o establecimientos reales. Fuentes reales y supuestos del generador en «Supuestos y fuentes».</span></div>
+  <div class="topline">
+    <h1 id="viewTitle">Visión general</h1>
+    <div class="meta">N=420 · VENTANA 24m · SEMILLA 20261117</div>
+  </div>
 
-<div class="wrap">
-  <header class="top">
-    <div class="eyebrow">Prototipo de exploración · Auditado noviembre 2026</div>
-    <h1>APS Continuidad</h1>
-    <p>Entorno de análisis para investigar dónde se interrumpe el seguimiento de pacientes hipertensos en el Programa de Salud Cardiovascular (PSCV) de la Atención Primaria chilena. Esta versión trabaja con una cohorte sintética de 420 pacientes para validar el diseño de las herramientas antes de solicitar acceso a datos institucionales reales. Tras una auditoría metodológica (ver <code>docs/auditoria_metodologica.md</code>), el generador ahora modela episodios de pérdida múltiples por paciente y expone explícitamente cada supuesto de riesgo.</p>
-  </header>
+  <!-- ===================== VISIÓN GENERAL ===================== -->
+  <section class="view" id="view-general">
+    <div class="content">
+      <div class="section">
+        <div class="q">¿Cuánta pérdida hay?</div>
+        <h2>Una de cada cinco personas tuvo al menos un episodio de pérdida de seguimiento</h2>
+        <p class="lede">420 pacientes hipertensos simulados, ingresados entre los meses 1 y 19 de una ventana de 24 meses, en 6 establecimientos ficticios con distinto desempeño basal. Cada celda de la franja indica su numerador, denominador y población elegible — pasa el cursor o lee la definición bajo cada número.</p>
+        <div class="mstrip" id="kpiGrid"></div>
+      </div>
 
-  <nav class="tabs" role="tablist" aria-label="Vistas del prototipo">
-    <button class="tab" role="tab" data-view="resumen" aria-selected="true">Resumen</button>
-    <button class="tab" role="tab" data-view="trayectorias" aria-selected="false">Trayectorias</button>
-    <button class="tab" role="tab" data-view="comparacion" aria-selected="false">Continuidad &amp; comparación</button>
-    <button class="tab" role="tab" data-view="simulador" aria-selected="false">Simulador</button>
-    <button class="tab" role="tab" data-view="fuentes" aria-selected="false">Fuentes</button>
-  </nav>
+      <div class="section">
+        <div class="q">¿Está creciendo o se estabiliza?</div>
+        <h2>Población activa en el tiempo</h2>
+        <p class="lede">Numerador: pacientes ya ingresados y no clasificados como "perdidos" al mes <em>m</em>. Denominador: cohorte total (420). La curva puede subir, no solo bajar: las recuperaciones (espontáneas o tras un rescate/evento) también quedan reflejadas.</p>
+        <div class="panel"><div class="pb"><svg id="sparkActive" class="timeline-svg" viewBox="0 0 900 180"></svg></div></div>
+      </div>
 
-  <!-- ===================== RESUMEN ===================== -->
-  <section class="view" id="view-resumen">
-    <div class="card">
-      <h2>Población bajo control — cohorte sintética</h2>
-      <p class="sub">420 pacientes hipertensos simulados, ingresados entre los meses 1 y 19 de una ventana de observación de 24 meses, distribuidos en 6 establecimientos ficticios con distinto desempeño basal (parámetros arbitrarios, ver pestaña "Fuentes"). Cada indicador indica su numerador, denominador y población elegible.</p>
-      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="section">
+        <div class="q">¿Dónde aparece el riesgo?</div>
+        <h2>Quienes pierden continuidad muestran más eventos adversos — pero esto no es un hallazgo</h2>
+        <p class="lede">% de cada grupo con al menos un evento de urgencia u hospitalización durante toda la ventana: pacientes que <strong>nunca</strong> tuvieron un episodio de pérdida vs. los que tuvieron <strong>al menos uno</strong>.</p>
+        <div class="panel"><div class="pb" id="riskCompare"></div></div>
+        <p class="caveat"><b>Esto es un supuesto programado, no un descubrimiento.</b> El generador asigna explícitamente un riesgo mensual de evento basal (bajo, en seguimiento) y uno creciente mientras el paciente está "perdido" — ver los valores exactos en Supuestos y fuentes. Con datos reales, esta misma vista permitiría evaluar si la asociación persiste, se atenúa o se explica por otros factores.</p>
+      </div>
     </div>
+  </section>
 
-    <div class="card">
-      <h2>Población activa en el tiempo</h2>
-      <p class="sub">Numerador: pacientes ya ingresados y no clasificados como "perdidos" al mes <em>m</em>. Denominador: cohorte total (420). Ventana: meses 1–24. La caída progresiva ilustra episodios de pérdida; las recuperaciones (espontáneas o tras un rescate/evento) también quedan reflejadas, por lo que la curva puede subir, no solo bajar.</p>
-      <svg id="sparkActive" class="timeline-svg" viewBox="0 0 900 180"></svg>
-    </div>
-
-    <div class="card">
-      <h2>¿Dónde aparece el riesgo?</h2>
-      <p class="sub">% de cada grupo con al menos un evento de urgencia u hospitalización durante toda la ventana de observación. Grupos: pacientes que <strong>nunca</strong> tuvieron un episodio de pérdida de seguimiento vs. pacientes que tuvieron <strong>al menos uno</strong>.</p>
-      <div id="riskCompare"></div>
-      <div class="note">
-        <b>Esto no es un hallazgo.</b> El generador asigna explícitamente un riesgo mensual de evento basal (bajo, mientras el paciente está en seguimiento) y un riesgo mensual creciente mientras el paciente está "perdido" (ver valores exactos y su justificación en Fuentes → Supuestos del generador). La diferencia entre ambos grupos es, en gran medida, la consecuencia directa de esos parámetros programados, no un patrón descubierto en los datos. Con datos reales, esta misma vista permitiría evaluar si la asociación persiste, se atenúa o se explica por otros factores.
+  <!-- ===================== TRANSICIONES ===================== -->
+  <section class="view" id="view-transiciones" hidden>
+    <div class="content">
+      <div class="section">
+        <div class="q">¿En qué mes del seguimiento se concentra la pérdida?</div>
+        <h2>Composición de estado mes a mes, por establecimiento</h2>
+        <p class="lede">Cada fila es un establecimiento ficticio; cada celda, un mes, coloreada por el % de su población activa que está perdida de seguimiento ese mes exacto — no acumulado al cierre. Esta es la pregunta que un embudo de una sola cifra final no puede responder: <em>cuándo</em>, no solo <em>cuánto</em>. Haz clic en el nombre de un establecimiento para ver sus trayectorias individuales.</p>
+        <div class="panel"><div class="pb"><div class="heat-wrap" id="heatmap"></div>
+          <div class="heat-scale">Menor % perdido <div class="ramp"></div> Mayor % perdido</div>
+        </div></div>
+        <p class="caveat">La escala de color es relativa al rango observado en esta cohorte sintética (no a un umbral clínico). Los seis establecimientos tienen parámetros arbitrarios — ver Supuestos y fuentes.</p>
       </div>
     </div>
   </section>
 
   <!-- ===================== TRAYECTORIAS ===================== -->
   <section class="view" id="view-trayectorias" hidden>
-    <div class="card">
-      <h2>Trayectorias individuales</h2>
-      <p class="sub">Reconstrucción longitudinal de un paciente: ingreso, controles asistidos/no asistidos, intentos de rescate, episodios de pérdida (puede haber más de uno), reingresos y eventos adversos. Selecciona un paciente para ver su línea de tiempo completa.</p>
-      <div class="traj-layout">
-        <div class="filters">
-          <select id="fEst"></select>
-          <select id="fEstado">
-            <option value="">Todos los estados</option>
-            <option value="activo">Activo, sin episodios de pérdida</option>
-            <option value="rescatado">Tuvo inasistencia, fue rescatado</option>
-            <option value="egreso">Egreso del programa (defunción/traslado)</option>
-            <option value="perdido">Perdido de seguimiento (al cierre)</option>
-            <option value="evento">Con ≥1 evento adverso registrado</option>
-          </select>
-          <input id="fSearch" type="text" placeholder="Buscar por ID (ej: P-014)">
-          <div class="patient-list" id="patientList"></div>
-        </div>
-        <div>
-          <div id="trajEmpty" class="sub" style="padding:30px 0; text-align:center">Selecciona un paciente de la lista para ver su trayectoria.</div>
-          <div id="trajDetail" hidden>
-            <div id="trajHeader" style="margin-bottom:10px"></div>
-            <svg id="trajSvg" class="timeline-svg" viewBox="0 0 900 140"></svg>
-            <div class="legend" id="trajLegend"></div>
-            <ol class="chronology" id="trajChrono"></ol>
+    <div class="content">
+      <div class="section">
+        <div class="q">¿Cómo es un caso, evento por evento?</div>
+        <h2>Trayectorias individuales</h2>
+        <p class="lede">Ingreso, controles asistidos/no asistidos, intentos de rescate, episodios de pérdida (puede haber más de uno), reingresos y eventos adversos — cada uno etiquetado como clínico, administrativo o de contacto, para no asumir que toda interrupción es responsabilidad del paciente.</p>
+        <div class="traj-layout">
+          <div class="filters">
+            <select id="fEst"></select>
+            <select id="fEstado">
+              <option value="">Todos los estados</option>
+              <option value="activo">Activo, sin episodios de pérdida</option>
+              <option value="rescatado">Tuvo inasistencia, fue rescatado</option>
+              <option value="egreso">Egreso del programa (defunción/traslado)</option>
+              <option value="perdido">Perdido de seguimiento (al cierre)</option>
+              <option value="evento">Con ≥1 evento adverso registrado</option>
+            </select>
+            <input id="fSearch" type="text" placeholder="Buscar por ID (ej: P-014)">
+            <div class="patient-list" id="patientList"></div>
+          </div>
+          <div class="panel">
+            <div class="pb">
+              <div id="trajEmpty" style="padding:30px 0; text-align:center; color:var(--ink-soft); font-size:.88rem">Selecciona un paciente de la lista para ver su trayectoria.</div>
+              <div id="trajDetail" hidden>
+                <div id="trajHeader" style="margin-bottom:10px"></div>
+                <svg id="trajSvg" class="timeline-svg" viewBox="0 0 900 140"></svg>
+                <div class="legend" id="trajLegend"></div>
+                <ol class="chronology" id="trajChrono"></ol>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ===================== CONTINUIDAD & COMPARACION ===================== -->
-  <section class="view" id="view-comparacion" hidden>
-    <div class="card">
-      <h2>Estado de continuidad al cierre de la ventana</h2>
-      <p class="sub">La continuidad asistencial no es un proceso de una sola vía: un mismo paciente puede tener varias inasistencias, rescates y reingresos antes del mes 24. Esta vista muestra, por eso, dos ramas (nunca perdido / perdió alguna vez) en lugar de un embudo de una sola dirección, más la distribución de cuántos episodios de pérdida tuvo cada paciente.</p>
-      <svg id="funnelSvg" class="timeline-svg" viewBox="0 0 900 300"></svg>
-      <h3 class="sec">Episodios de pérdida de seguimiento por paciente</h3>
-      <p class="sub">Un episodio = un ciclo completo de ≥2 controles trimestrales consecutivos no asistidos con rescate fallido, hasta el siguiente reingreso (espontáneo o tras un evento adverso). Un paciente puede acumular más de uno dentro de la ventana de 24 meses.</p>
-      <table class="cmp" id="episodeTable"></table>
-    </div>
+  <!-- ===================== COHORTES ===================== -->
+  <section class="view" id="view-cohortes" hidden>
+    <div class="content">
+      <div class="section">
+        <div class="q">¿Quién difiere, y cómo?</div>
+        <h2>La continuidad no es una sola vía: episodios de pérdida por paciente</h2>
+        <p class="lede">Un episodio = ≥2 controles trimestrales consecutivos no asistidos con rescate fallido, hasta el siguiente reingreso. Un mismo paciente puede acumular más de uno dentro de la ventana — por eso esta cohorte se describe por distribución de episodios, no por un embudo de una sola dirección.</p>
+        <div class="panel"><div class="pb"><table class="cmp" id="episodeTable"></table></div></div>
+      </div>
 
-    <div class="card">
-      <h2>Comparación entre establecimientos (sintéticos)</h2>
-      <p class="sub">Los nombres y parámetros son ficticios y arbitrarios — no representan diferencias documentadas entre centros reales de ningún tipo (urbano/rural u otro). Cada fila reutiliza exactamente las mismas fórmulas que las tarjetas de Resumen, aplicadas al subconjunto de pacientes de ese establecimiento.</p>
-      <table class="cmp" id="cmpTable"></table>
+      <div class="section">
+        <div class="q">¿Difiere por sexo o por grupo etario?</div>
+        <h2>Desenlaces por cohorte demográfica</h2>
+        <p class="lede">Mismas fórmulas que Visión general, aplicadas a subgrupos de la cohorte. Una brecha aquí tampoco es evidencia causal — con datos reales permitiría priorizar a qué subgrupo dirigir una intervención.</p>
+        <div class="panel"><div class="pb"><table class="cmp" id="cohortSexTable"></table></div></div>
+        <div class="panel"><div class="pb"><table class="cmp" id="cohortAgeTable"></table></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ESTABLECIMIENTOS ===================== -->
+  <section class="view" id="view-establecimientos" hidden>
+    <div class="content">
+      <div class="section">
+        <div class="q">¿Es el sistema o es el centro (ficticio)?</div>
+        <h2>Comparación entre establecimientos sintéticos</h2>
+        <p class="lede">Los nombres y parámetros son ficticios y arbitrarios — no representan diferencias documentadas entre centros reales de ningún tipo. Cada fila reutiliza exactamente las mismas fórmulas que la Visión general, aplicadas al subconjunto de ese establecimiento. Haz clic en una fila para ver sus trayectorias.</p>
+        <div class="panel"><div class="pb"><table class="cmp" id="cmpTable"></table><div id="cmpWarning"></div></div></div>
+      </div>
     </div>
   </section>
 
   <!-- ===================== SIMULADOR ===================== -->
   <section class="view" id="view-simulador" hidden>
-    <div class="card">
-      <h2>Simulador de intervención</h2>
-      <p class="sub">Proyección simplificada (no es un modelo validado ni un resultado esperado real). Separa tres supuestos que en la versión anterior estaban mezclados: (1) qué tan efectivo es el rescate de inasistentes, (2) si ese rescate realmente reduce la pérdida de seguimiento proyectada en este modelo, y (3) cuán fuerte se asume la relación entre pérdida de seguimiento y eventos adversos — un vínculo que este prototipo <strong>no</strong> toma de ningún estudio real.</p>
+    <div class="content">
+      <div class="section">
+        <div class="q">¿Y si cambiara X?</div>
+        <h2>Simulador de intervención</h2>
+        <p class="lede">Proyección simplificada, no un modelo validado. Separa tres supuestos que antes estaban mezclados: (1) qué tan efectivo es el rescate de inasistentes, (2) si ese rescate reduce la pérdida proyectada <em>en este modelo</em>, y (3) cuán fuerte se asume el vínculo entre pérdida y eventos adversos — un vínculo que este prototipo <strong>no</strong> toma de ningún estudio real.</p>
 
-      <h3 class="sec">1 · Efectividad del rescate de inasistentes</h3>
-      <div class="slider-row">
-        <label for="rescueSlider"><span>Probabilidad de rescate exitoso tras una inasistencia</span><span class="tabular" id="rescueVal">—</span></label>
-        <input type="range" id="rescueSlider" min="10" max="90" value="50">
-        <div class="hint">El valor inicial corresponde a la tasa de rescate <em>realizada</em> en la cohorte sintética (no un número fijo). Los recordatorios y el rescate activo pueden mejorar la asistencia a citas — ver Werner et al. (2023), que reporta evidencia favorable pero con intervalos de confianza amplios (OR≈1.21, IC95% 0.41–2.00 para recordatorios por SMS) — esto <strong>no</strong> es el dato de HEARTS sobre compensación de hipertensión.</div>
-      </div>
-      <div class="toggle-row" style="margin-top:12px">
-        <input type="checkbox" id="proactiveToggle">
-        <label for="proactiveToggle">Agregar contacto proactivo temprano (recordatorio antes del primer control vencido)</label>
-      </div>
-
-      <div class="sim-divider"></div>
-      <h3 class="sec">2 · Fuerza asumida del vínculo "pérdida de seguimiento → evento adverso"</h3>
-      <div class="slider-row">
-        <label for="linkSlider"><span>Multiplicador sobre el efecto sin vínculo asumido (1,0× = igual que la cohorte base)</span><span class="tabular" id="linkVal">1,0×</span></label>
-        <input type="range" id="linkSlider" min="0" max="200" value="100">
-        <div class="hint">Este control no proviene de ningún estudio citado: existe para que puedas ver cuánto cambia la proyección de eventos adversos si se asume un vínculo más fuerte, más débil o nulo (0×) entre pérdida de continuidad y urgencia/hospitalización. Es, deliberadamente, el supuesto más especulativo del simulador.</div>
-      </div>
-
-      <div class="sim-compare">
-        <div class="sim-box">
-          <h3>Situación actual (cohorte sintética)</h3>
-          <div class="big tabular" id="simBaseLost">—</div>
-          <div class="sub" style="margin:2px 0 10px">pérdida de seguimiento acumulada (≥1 episodio)</div>
-          <div class="big tabular" id="simBaseEvt">—</div>
-          <div class="sub" style="margin:2px 0">pacientes con ≥1 evento adverso</div>
+        <div class="panel">
+          <div class="ph">1 · Efectividad del rescate de inasistentes</div>
+          <div class="pb">
+            <div class="slider-row">
+              <label for="rescueSlider"><span>Probabilidad de rescate exitoso tras una inasistencia</span><span class="tabular" id="rescueVal">—</span></label>
+              <input type="range" id="rescueSlider" min="10" max="90" value="50">
+              <div class="hint">El valor inicial es la tasa de rescate <em>realizada</em> en la cohorte (no un número fijo). Los recordatorios pueden mejorar la asistencia — Werner et al. (2023) reporta evidencia favorable con intervalos amplios (OR≈1,21; IC95% 0,41–2,00 para SMS) — esto <strong>no</strong> es el dato de HEARTS sobre compensación.</div>
+            </div>
+            <div class="toggle-row" style="margin-top:12px">
+              <input type="checkbox" id="proactiveToggle">
+              <label for="proactiveToggle">Agregar contacto proactivo temprano (recordatorio antes del primer control vencido)</label>
+            </div>
+          </div>
         </div>
-        <div class="sim-box" style="border-color:var(--accent)">
-          <h3 style="color:var(--accent)">Escenario simulado</h3>
-          <div class="big tabular" id="simNewLost">—</div>
-          <div class="sub" style="margin:2px 0 10px" id="simLostDelta">—</div>
-          <div class="big tabular" id="simNewEvt">—</div>
-          <div class="sub" style="margin:2px 0" id="simEvtDelta">—</div>
+
+        <div class="panel">
+          <div class="ph">2 · Fuerza asumida del vínculo "pérdida → evento adverso"</div>
+          <div class="pb">
+            <div class="slider-row">
+              <label for="linkSlider"><span>Multiplicador sobre el efecto sin vínculo asumido (1,0× = igual que la cohorte base)</span><span class="tabular" id="linkVal">1,0×</span></label>
+              <input type="range" id="linkSlider" min="0" max="200" value="100">
+              <div class="hint">No proviene de ningún estudio citado: existe para ver cuánto cambia la proyección si se asume un vínculo más fuerte, más débil o nulo (0×). Es, deliberadamente, el supuesto más especulativo del simulador.</div>
+            </div>
+            <div class="sim-compare">
+              <div class="sim-box">
+                <h3>Situación actual</h3>
+                <div class="big tabular" id="simBaseLost">—</div>
+                <div class="sim-note" style="margin:2px 0 10px">pérdida de seguimiento acumulada (≥1 episodio)</div>
+                <div class="big tabular" id="simBaseEvt">—</div>
+                <div class="sim-note" style="margin:2px 0">pacientes con ≥1 evento adverso</div>
+              </div>
+              <div class="sim-box accent">
+                <h3>Escenario simulado</h3>
+                <div class="big tabular" id="simNewLost">—</div>
+                <div class="sim-note" style="margin:2px 0 10px" id="simLostDelta">—</div>
+                <div class="big tabular" id="simNewEvt">—</div>
+                <div class="sim-note" style="margin:2px 0" id="simEvtDelta">—</div>
+              </div>
+            </div>
+            <p class="sim-note" id="simFormula"></p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph">3 · Compensación de hipertensión — no modificada por este simulador</div>
+          <div class="pb">
+            <div class="mstrip" style="border:none">
+              <div class="mcell hero" style="border:none; padding-left:0">
+                <div class="l">% compensados en su último control</div>
+                <div class="v tabular" id="simCompensation">—</div>
+              </div>
+            </div>
+            <p class="sim-note">Este número es solo contexto: la compensación depende de una probabilidad propia de cada establecimiento al momento del control, <strong>no</strong> de los controles 1 y 2 de arriba. HEARTS (Barake et al. 2022) reportó una mejora real de compensación poblacional de 16% a 33% — un resultado sobre compensación clínica, no sobre inasistencia ni urgencias/hospitalizaciones, por lo que deliberadamente no se usa como parámetro de los controles 1 y 2.</p>
+            <p class="sim-note">Evaluar si una intervención real reduce la pérdida, mejora la compensación o reduce eventos adversos requiere un diseño experimental o cuasiexperimental con datos reales (Etapa IV de la propuesta de investigación), no una extrapolación de este simulador.</p>
+          </div>
         </div>
       </div>
-      <p class="sim-note" id="simFormula"></p>
-
-      <div class="sim-divider"></div>
-      <h3 class="sec">3 · Compensación de hipertensión (no modificada por este simulador)</h3>
-      <div class="sim-box" style="max-width:420px">
-        <h3>% compensados en su último control</h3>
-        <div class="big tabular" id="simCompensation">—</div>
-      </div>
-      <p class="sim-note">Este número se muestra solo como contexto: en este generador, la compensación depende de una probabilidad propia de cada establecimiento al momento del control, <strong>no</strong> de la efectividad de rescate ni del vínculo con eventos adversos de arriba, así que no cambia con los controles de este simulador. HEARTS (Barake et al. 2022) reportó una mejora real de compensación poblacional de 16% a 33% tras su implementación — ese resultado es sobre compensación clínica, no sobre inasistencia ni sobre urgencias/hospitalizaciones, por lo que deliberadamente no se usa como parámetro de los controles 1 y 2.</p>
-      <p class="sim-note">Evaluar si una intervención real reduce la pérdida de seguimiento, mejora la compensación o reduce eventos adversos requiere un diseño experimental o cuasiexperimental con datos reales (Etapa IV de la propuesta de investigación), no una extrapolación de este simulador.</p>
     </div>
   </section>
 
   <!-- ===================== FUENTES ===================== -->
   <section class="view" id="view-fuentes" hidden>
-    <div class="card">
-      <h2>Fuentes reales usadas como referencia</h2>
-      <p class="sub">Documentos y bases efectivamente descargados y verificados en la etapa de investigación (ver <code>docs/catalogo_fuentes.md</code> del repositorio del proyecto). Se citan aquí para que ningún parámetro del prototipo parezca inventado sin origen.</p>
-      <div class="src-list">
-        <div><span class="tag real">Real</span>MINSAL/DEIS (2025). <em>Manual REM Serie P, v1.2</em> y planilla SP_25_V1.3 — define las variables de población bajo control y compensación de HTA en el PSCV.</div>
-        <div><span class="tag real">Real</span>MINSAL/DEIS (2025). <em>Manual Series REM A/BS/BM/D, v1.3</em> — define consultas y controles cardiovasculares en APS (REM-A04).</div>
-        <div><span class="tag real">Real</span>MINSAL (2026). <em>Glosa N°6 — Listas de Espera No GES y Garantías GES retrasadas</em>, corte junio 2026.</div>
-        <div><span class="tag real">Real</span>MINSAL/DEIS. <em>Lista Tabular CIE-10</em> (actualizada agosto 2026) — códigos I10–I15 (hipertensión) e I20–I25, I50, I60–I69, N18 (complicaciones) usados como referencia conceptual de desenlaces.</div>
-        <div><span class="tag real">Real</span>Barake et al. (2022). <em>Chile's public healthcare sector hypertension control rates before and during the pandemic and HEARTS implementation.</em> Rev Panam Salud Publica. DOI: 10.26633/RPSP.2022.126 — citado en la pestaña Simulador como contraste explícito (compensación, no inasistencia ni eventos adversos); no se usa como parámetro directo de ningún control.</div>
-        <div><span class="tag real">Real</span>Escobar-San Martín, Droguett Droguett &amp; Sabando Franulic (2026). <em>Sociodemographic determinants of appointment no-show in primary care: a cross-sectional study in Renca Commune, Chile (2022–2023).</em> BMC Primary Care. DOI: 10.1186/s12875-025-03170-9 — estudio chileno de referencia para el fenómeno de inasistencia que motiva este proyecto.</div>
-        <div><span class="tag real">Real</span>Werner et al. (2023). <em>Behavioural economic interventions to reduce health care appointment non-attendance: a systematic review and meta-analysis.</em> BMC Health Services Research. DOI: 10.1186/s12913-023-10059-9 — base conceptual del control "efectividad de rescate / contacto proactivo" del simulador; su propio metanálisis reporta intervalos de confianza amplios, citados tal cual en el simulador.</div>
-        <div><span class="tag real">Real</span>Bastías et al. (2024). <em>Factores sociales y de salud relacionados a la discontinuidad de los tratamientos en adultos chilenos con enfermedades crónicas durante la pandemia por COVID-19.</em> Rev Méd Chile 152(10). DOI: 10.4067/s0034-98872024001001038 — reporta 12% de discontinuidad de tratamiento en HTA durante la pandemia.</div>
-        <div><span class="tag syn">Sintético</span>Los 420 pacientes, sus 6 establecimientos, calendarios de control, resultados de rescate y eventos adversos son generados por un algoritmo con semilla fija. No describen a ninguna persona ni establecimiento real.</div>
+    <div class="content">
+      <div class="section">
+        <div class="q">¿Qué de esto es real?</div>
+        <h2>Fuentes reales usadas como referencia</h2>
+        <p class="lede">Documentos y bases efectivamente descargados y verificados en la etapa de investigación (ver <code>docs/catalogo_fuentes.md</code>). Se citan aquí para que ningún parámetro del prototipo parezca inventado sin origen.</p>
+        <div class="panel"><div class="pb">
+        <div class="src-list">
+          <div><span class="tag real">Real</span>MINSAL/DEIS (2025). <em>Manual REM Serie P, v1.2</em> y planilla SP_25_V1.3 — define las variables de población bajo control y compensación de HTA en el PSCV.</div>
+          <div><span class="tag real">Real</span>MINSAL/DEIS (2025). <em>Manual Series REM A/BS/BM/D, v1.3</em> — define consultas y controles cardiovasculares en APS (REM-A04).</div>
+          <div><span class="tag real">Real</span>MINSAL (2026). <em>Glosa N°6 — Listas de Espera No GES y Garantías GES retrasadas</em>, corte junio 2026.</div>
+          <div><span class="tag real">Real</span>MINSAL/DEIS. <em>Lista Tabular CIE-10</em> (actualizada agosto 2026) — códigos I10–I15 (hipertensión) e I20–I25, I50, I60–I69, N18 (complicaciones) usados como referencia conceptual de desenlaces.</div>
+          <div><span class="tag real">Real</span>Barake et al. (2022). <em>Chile's public healthcare sector hypertension control rates before and during the pandemic and HEARTS implementation.</em> Rev Panam Salud Publica. DOI: 10.26633/RPSP.2022.126 — citado en Simulador como contraste explícito (compensación, no inasistencia ni eventos adversos); no se usa como parámetro directo de ningún control.</div>
+          <div><span class="tag real">Real</span>Escobar-San Martín, Droguett Droguett &amp; Sabando Franulic (2026). <em>Sociodemographic determinants of appointment no-show in primary care: a cross-sectional study in Renca Commune, Chile (2022–2023).</em> BMC Primary Care. DOI: 10.1186/s12875-025-03170-9 — estudio chileno de referencia para el fenómeno de inasistencia que motiva este proyecto.</div>
+          <div><span class="tag real">Real</span>Werner et al. (2023). <em>Behavioural economic interventions to reduce health care appointment non-attendance: a systematic review and meta-analysis.</em> BMC Health Services Research. DOI: 10.1186/s12913-023-10059-9 — base conceptual del control "efectividad de rescate / contacto proactivo" del simulador; su propio metanálisis reporta intervalos de confianza amplios, citados tal cual en el simulador.</div>
+          <div><span class="tag real">Real</span>Bastías et al. (2024). <em>Factores sociales y de salud relacionados a la discontinuidad de los tratamientos en adultos chilenos con enfermedades crónicas durante la pandemia por COVID-19.</em> Rev Méd Chile 152(10). DOI: 10.4067/s0034-98872024001001038 — reporta 12% de discontinuidad de tratamiento en HTA durante la pandemia.</div>
+          <div><span class="tag syn">Sintético</span>Los 420 pacientes, sus 6 establecimientos, calendarios de control, resultados de rescate y eventos adversos son generados por un algoritmo con semilla fija. No describen a ninguna persona ni establecimiento real.</div>
+        </div>
+        <p class="foot-source" style="margin:16px 0 0; padding-top:12px">Catálogo completo de fuentes reales, con URLs, fechas de descarga y limitaciones, en <code>aps-continuidad/docs/catalogo_fuentes.md</code>. Auditoría metodológica completa en <code>aps-continuidad/docs/auditoria_metodologica.md</code>.</p>
+        </div></div>
       </div>
-      <p class="foot-source">Catálogo completo de fuentes reales, con URLs, fechas de descarga y limitaciones, en <code>aps-continuidad/docs/catalogo_fuentes.md</code>. Auditoría metodológica completa de este prototipo en <code>aps-continuidad/docs/auditoria_metodologica.md</code>.</p>
 
-      <h3 class="sec">Supuestos explícitos del generador (todos arbitrarios / ilustrativos, no calibrados con datos reales)</h3>
-      <p class="sub">Cada número en esta tabla fue elegido por el equipo para que el prototipo tuviera un comportamiento plausible, no estimado a partir de las fuentes reales anteriores salvo donde se indica. Esta tabla es la lista completa de "dónde se inyecta cada supuesto" que pide la auditoría metodológica.</p>
-      <table class="cmp" id="assumptionsTable"></table>
+      <div class="section">
+        <div class="q">¿De dónde sale cada número del generador?</div>
+        <h2>Supuestos explícitos del generador</h2>
+        <p class="lede">Todos arbitrarios/ilustrativos, no calibrados con datos reales salvo donde se indica. Esta tabla es la lista completa de "dónde se inyecta cada supuesto" que pide la auditoría metodológica.</p>
+        <div class="panel"><div class="pb"><table class="cmp" id="assumptionsTable"></table></div></div>
+      </div>
     </div>
   </section>
 
-  <p class="foot-source" style="margin-top:10px">APS Continuidad — prototipo de exploración, etapa de diagnóstico y diseño (noviembre–diciembre 2026). No sustituye criterio clínico ni constituye un sistema de uso en producción. Ninguna asociación mostrada entre pérdida de continuidad y eventos adversos debe interpretarse como evidencia causal: todas se derivan de un generador sintético con parámetros declarados.</p>
+  <p class="foot-source">APS Continuidad — prototipo de exploración, etapa de diagnóstico y diseño (noviembre–diciembre 2026). No sustituye criterio clínico ni constituye un sistema de uso en producción. Ninguna asociación mostrada entre pérdida de continuidad y eventos adversos debe interpretarse como evidencia causal: todas se derivan de un generador sintético con parámetros declarados.</p>
+</div>
 </div>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <script>
 (function(){
 "use strict";
@@ -576,33 +676,32 @@ function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(n
 function fmtPct(x){ return x===null ? 's/d' : (x*100).toFixed(1)+'%'; }
 function dm(m){ return m+1; } // internal 0-indexed month -> display month (1..24)
 
-/* ---- KPI cards ---- */
+/* ---- metrics strip (replaces the old repeated KPI card grid) ---- */
 function renderKPIs(){
   const grid = document.getElementById('kpiGrid');
   const items = [
-    {label:'Población ingresada', value: AGG.total, def:'N = 420. Universo completo de la cohorte sintética.'},
+    {label:'Pérdida de continuidad (cruda)', value: fmtPct(AGG.lostPct), delta: AGG.everLost+' de '+AGG.total+' pacientes', cls:'bad', hero:true,
+      def:'≥1 episodio de pérdida en toda la ventana, sin ajustar por tiempo de seguimiento disponible.'},
+    {label:'Pérdida de continuidad (ajustada)', value: fmtPct(AGG.lostPctAdjusted), delta: 'n='+AGG.lostPctAdjustedN+' con ≥12m posibles', cls:'warn',
+      def:'Mismo numerador; denominador restringido a quienes tuvieron suficiente tiempo de seguimiento posible para haber podido perderlo.'},
     {label:'Activos al mes 24', value: AGG.total-AGG.lostNow, delta: fmtPct((AGG.total-AGG.lostNow)/AGG.total)+' del total', cls:'good',
-      def:'Numerador: no "perdidos" al mes 24. Denominador: 420.'},
-    {label:'Pérdida de continuidad (cruda)', value: fmtPct(AGG.lostPct), delta: AGG.everLost+' de '+AGG.total+' pacientes', cls:'bad',
-      def:'≥1 episodio de pérdida en toda la ventana, sin ajustar por tiempo de seguimiento disponible — ver versión ajustada abajo.'},
-    {label:'Pérdida de continuidad (ajustada)', value: fmtPct(AGG.lostPctAdjusted), delta: 'n='+AGG.lostPctAdjustedN+' con ≥12 meses de seguimiento posible', cls:'warn',
-      def:'Mismo numerador, pero el denominador se restringe a pacientes con suficiente tiempo de seguimiento posible para haber podido perderlo (evita el sesgo de tiempo inmortal de la versión cruda).'},
-    {label:'% cumplimiento de controles', value: fmtPct(AGG.attendanceRate), delta: AGG.controlesProgramados+' controles programados', cls: AGG.attendanceRate>0.7?'good':'warn',
-      def:'Numerador: controles asistidos. Denominador: controles programados (asistidos + no asistidos) mientras el paciente estaba en seguimiento.'},
-    {label:'Tasa de rescate exitoso', value: fmtPct(AGG.rescueRate), delta: AGG.rescueAttempts+' intentos de rescate',
-      def:'Numerador: rescates exitosos. Denominador: todos los intentos de rescate (exitosos + fallidos), cualquier mes de la ventana.'},
-    {label:'% compensados (última visita)', value: fmtPct(AGG.compensationRateLastControl), delta:'por paciente, no por visita', cls: AGG.compensationRateLastControl>0.4?'good':'warn',
-      def:'Indicador a nivel de persona: estado de compensación en el último control asistido por cada paciente — más comparable al indicador REM-P oficial que un promedio por visita.'},
-    {label:'% controles compensados (por visita)', value: fmtPct(AGG.compensationRateVisits), delta:'promedio de todas las visitas',
-      def:'Indicador a nivel de visita: cada control asistido cuenta una vez, así que pacientes con más controles pesan más. No equivale al indicador REM-P oficial (persona, corte transversal).'},
-    {label:'Pacientes con ≥1 evento adverso', value: AGG.adversePatients, delta: AGG.adverseEventsTotal+' eventos en total (urgencia + hospitalización)', cls:'bad',
-      def:'Un paciente puede tener más de un evento; aquí se cuentan personas y, aparte, el total de eventos.'},
+      def:'No "perdidos" al mes 24, sobre el total de 420.'},
+    {label:'% cumplimiento de controles', value: fmtPct(AGG.attendanceRate), delta: AGG.controlesProgramados+' programados', cls: AGG.attendanceRate>0.7?'good':'warn',
+      def:'Controles asistidos / controles programados (asistidos + no asistidos) mientras el paciente estaba en seguimiento.'},
+    {label:'Tasa de rescate exitoso', value: fmtPct(AGG.rescueRate), delta: AGG.rescueAttempts+' intentos',
+      def:'Rescates exitosos / todos los intentos de rescate, cualquier mes de la ventana.'},
+    {label:'% compensados (última visita)', value: fmtPct(AGG.compensationRateLastControl), delta:'por paciente', cls: AGG.compensationRateLastControl>0.4?'good':'warn',
+      def:'Nivel de persona: compensación en el último control asistido — comparable al indicador REM-P oficial.'},
+    {label:'% compensados (por visita)', value: fmtPct(AGG.compensationRateVisits), delta:'promedio de visitas',
+      def:'Nivel de visita: cada control cuenta una vez; pacientes con más controles pesan más. No equivale al REM-P oficial.'},
+    {label:'Pacientes con ≥1 evento adverso', value: AGG.adversePatients, delta: AGG.adverseEventsTotal+' eventos en total', cls:'bad',
+      def:'Personas con ≥1 urgencia/hospitalización; un paciente puede tener más de un evento.'},
   ];
   grid.innerHTML = items.map(it=>`
-    <div class="kpi">
-      <div class="label">${it.label}</div>
-      <div class="value tabular">${it.value}</div>
-      ${it.delta?`<div class="delta ${it.cls||''}">${it.delta}</div>`:''}
+    <div class="mcell${it.hero?' hero':''}">
+      <div class="l">${it.label}</div>
+      <div class="v tabular">${it.value}</div>
+      ${it.delta?`<div class="d ${it.cls||''}">${it.delta}</div>`:''}
       <div class="def">${it.def}</div>
     </div>`).join('');
 }
@@ -654,39 +753,57 @@ function renderRiskCompare(){
     </div>`).join('');
 }
 
-/* ---- continuity state (two branches) + episode distribution ---- */
-function renderFunnel(){
-  const svg = document.getElementById('funnelSvg');
-  svg.innerHTML='';
-  const total = AGG.total;
-  const conControl = PATIENTS.filter(p=>p.events.some(e=>e.type==='control')).length;
-  const regularConControl = PATIENTS.filter(p=>!p.everLost && p.events.some(e=>e.type==='control')).length;
-  const regularRescatado = PATIENTS.filter(p=>!p.everLost && p.events.some(e=>e.type==='rescate_exitoso')).length;
-  const perdidos = AGG.everLost;
-  const perdidosConEvento = PATIENTS.filter(p=>p.everLost && p.adverseEvents.length>0).length;
-  const perdidosReenganchados = PATIENTS.filter(p=>p.everLost && !p.lostNow).length;
+/* ---- monthly state-composition matrix, per establishment ----
+   Pure analysis over the already-generated PATIENTS/events — does not
+   touch the MODEL block. For each establishment and each month, classifies
+   every one of its already-ingresado patients into 'lost' or 'active' by
+   replaying events up to that month, same logic as activeByMonth() but
+   kept separate here (rendering concern, not generation). Resolves
+   diagnostic finding #1 in docs/rediseno_ux.md: a single end-of-window
+   funnel cannot show WHEN losses concentrate, only how many by the end. */
+function computeMonthlyLossShareByEst(){
+  return ESTAB.map(est=>{
+    const ps = PATIENTS.filter(p=>p.est.id===est.id);
+    const shares = [];
+    for(let m=0;m<HORIZON;m++){
+      let ingresados=0, lost=0;
+      ps.forEach(p=>{
+        if(p.ingreso>m) return;
+        ingresados++;
+        let isLost=false;
+        for(const e of p.events){
+          if(e.month>m) break;
+          if(e.type==='perdido') isLost=true;
+          if(e.type==='reingreso'||e.type==='reingreso_post_evento') isLost=false;
+        }
+        if(isLost) lost++;
+      });
+      shares.push(ingresados ? lost/ingresados : null);
+    }
+    return {est, shares};
+  });
+}
 
-  const stages = [
-    {label:'Ingresados al PSCV', n:total, group:0},
-    {label:'Con ≥1 control asistido alguna vez', n:conControl, group:0},
-    {label:'Rama A · nunca perdieron seguimiento, con control asistido', n:regularConControl, group:1},
-    {label:'  — de ellos, con ≥1 inasistencia rescatada', n:regularRescatado, group:1},
-    {label:'Rama B · tuvieron ≥1 episodio de pérdida de seguimiento', n:perdidos, group:2},
-    {label:'  — de ellos, reingresaron antes del cierre', n:perdidosReenganchados, group:2},
-    {label:'  — de ellos, con ≥1 evento adverso durante el episodio', n:perdidosConEvento, group:2},
-  ];
-  const H=10 + stages.length*46 + 10;
-  svg.setAttribute('viewBox','0 0 900 '+H);
-  const W=900, rowH=46, maxW=560, startX=130;
-  const accent = cssVar('--accent'), bad=cssVar('--bad'), good=cssVar('--good'), muted=cssVar('--muted'), fg=cssVar('--fg');
-  stages.forEach((s,i)=>{
-    const y = 10 + i*rowH;
-    const w = Math.max(6, (s.n/total)*maxW);
-    const color = s.group===2 ? bad : (s.group===1 ? good : accent);
-    const indent = s.label.startsWith('  —');
-    el('rect',{x:startX+(indent?20:0), y, width:w-(indent?20:0), height:26, rx:5, fill:color, opacity: indent?0.55:0.85},svg);
-    el('text',{x:startX-10, y:y+18, 'text-anchor':'end', fill:fg, 'font-size':13},svg).textContent = s.label.trim();
-    el('text',{x:startX+w+10+(indent?-20:0), y:y+18, fill:muted, 'font-size':13, 'font-weight':600},svg).textContent = s.n+' ('+fmtPct(s.n/total)+')';
+function renderHeatmap(){
+  const host = document.getElementById('heatmap');
+  const rows = computeMonthlyLossShareByEst();
+  const allVals = rows.flatMap(r=>r.shares.filter(v=>v!==null));
+  const max = Math.max(0.05, ...allVals); // floor avoids a flat all-hot row if max is tiny
+  function mix(t){ // 0..1 -> color between --accent-dim and --bad, via the browser's own color-mix()
+    return `color-mix(in srgb, var(--accent-dim), var(--bad) ${Math.round(t*100)}%)`;
+  }
+  host.innerHTML = rows.map(r=>`
+    <div class="heat-row">
+      <div class="hname" data-est="${r.est.id}" title="Ver trayectorias de ${r.est.name}">${r.est.name.replace('Establecimiento ficticio ','Ficticio ')}</div>
+      <div class="heat-cells">${r.shares.map((v,m)=>
+        `<div class="heat-cell" style="background:${v===null?'transparent':mix(Math.min(1,v/max))}" title="${r.est.name} · mes ${dm(m)} · ${v===null?'sin pacientes ingresados aún':fmtPct(v)+' perdidos ese mes'}"></div>`
+      ).join('')}</div>
+    </div>`).join('') +
+    `<div class="heat-axis">${Array.from({length:HORIZON},(_, m)=>
+      `<span>${(m%6===0)?'m'+dm(m):''}</span>`).join('')}</div>`;
+
+  host.querySelectorAll('.hname').forEach(h=>{
+    h.addEventListener('click', ()=> goToTrayectoriasForEst(h.dataset.est));
   });
 }
 
@@ -695,8 +812,32 @@ function renderEpisodeTable(){
   const dist = AGG.episodeDistribution;
   const keys = Object.keys(dist).map(Number).sort((a,b)=>a-b);
   table.innerHTML = `
-    <tr>${keys.map(k=>`<th>${k===0?'0 episodios':k+' episodio'+(k>1?'s':'')}</th>`).join('')}</tr>
+    <tr>${keys.map(k=>`<th class="num">${k===0?'0 episodios':k+' episodio'+(k>1?'s':'')}</th>`).join('')}</tr>
     <tr>${keys.map(k=>`<td class="num tabular">${dist[k]} (${fmtPct(dist[k]/AGG.total)})</td>`).join('')}</tr>
+  `;
+}
+
+/* ---- cohort breakdowns (sex, age tercile) — same shared aggregates ---- */
+function renderCohortTables(){
+  const bySex = [
+    {label:'Femenino', ps: PATIENTS.filter(p=>p.sex==='F')},
+    {label:'Masculino', ps: PATIENTS.filter(p=>p.sex==='M')},
+  ];
+  document.getElementById('cohortSexTable').innerHTML = `
+    <tr><th>Por sexo</th><th class="num">N</th><th class="num">% pérdida (cruda)</th><th class="num">% compensación (última visita)</th><th class="num">Pacientes con evento adverso</th></tr>
+    ${bySex.map(g=>{ const a=computeAggregates(g.ps); return `<tr><td>${g.label}</td><td class="num tabular">${g.ps.length}</td><td class="num tabular">${fmtPct(a.lostPct)}</td><td class="num tabular">${fmtPct(a.compensationRateLastControl)}</td><td class="num tabular">${fmtPct(a.adversePatients/(g.ps.length||1))}</td></tr>`; }).join('')}
+  `;
+
+  const ages = PATIENTS.map(p=>p.age).sort((a,b)=>a-b);
+  const q1 = ages[Math.floor(ages.length/3)], q2 = ages[Math.floor(ages.length*2/3)];
+  const byAge = [
+    {label:`35–${q1} años`, ps: PATIENTS.filter(p=>p.age<=q1)},
+    {label:`${q1+1}–${q2} años`, ps: PATIENTS.filter(p=>p.age>q1 && p.age<=q2)},
+    {label:`${q2+1}+ años`, ps: PATIENTS.filter(p=>p.age>q2)},
+  ];
+  document.getElementById('cohortAgeTable').innerHTML = `
+    <tr><th>Por edad (terciles)</th><th class="num">N</th><th class="num">% pérdida (cruda)</th><th class="num">% compensación (última visita)</th><th class="num">Pacientes con evento adverso</th></tr>
+    ${byAge.map(g=>{ const a=computeAggregates(g.ps); return `<tr><td>${g.label}</td><td class="num tabular">${g.ps.length}</td><td class="num tabular">${fmtPct(a.lostPct)}</td><td class="num tabular">${fmtPct(a.compensationRateLastControl)}</td><td class="num tabular">${fmtPct(a.adversePatients/(g.ps.length||1))}</td></tr>`; }).join('')}
   `;
 }
 
@@ -706,12 +847,12 @@ function renderComparisonTable(){
   const rows = ESTAB.map(e=>{
     const ps = PATIENTS.filter(p=>p.est.id===e.id);
     const a = computeAggregates(ps);
-    return {name:e.name, n:ps.length, a};
+    return {id:e.id, name:e.name, n:ps.length, a};
   });
   table.innerHTML = `
-    <tr><th>Establecimiento (ficticio)</th><th>N</th><th>% pérdida (cruda)</th><th>% compensación (última visita)</th><th>% rescate exitoso</th></tr>
+    <tr><th>Establecimiento (ficticio)</th><th class="num">N</th><th class="num">% pérdida (cruda)</th><th class="num">% compensación (última visita)</th><th class="num">% rescate exitoso</th></tr>
     ${rows.map(r=>`
-      <tr>
+      <tr class="linkable" data-est="${r.id}" title="Ver trayectorias de ${r.name}">
         <td>${r.name}</td>
         <td class="num tabular">${r.n}</td>
         <td class="num tabular">${fmtPct(r.a.lostPct)}</td>
@@ -719,10 +860,25 @@ function renderComparisonTable(){
         <td class="num tabular">${fmtPct(r.a.rescueRate)}</td>
       </tr>`).join('')}
   `;
+  table.querySelectorAll('tr[data-est]').forEach(row=>{
+    row.addEventListener('click', ()=> goToTrayectoriasForEst(row.dataset.est));
+  });
   const sumN = rows.reduce((s,r)=>s+r.n,0);
-  if(sumN !== AGG.total){
-    table.insertAdjacentHTML('afterend', `<p class="sub" style="color:var(--bad)">⚠ Inconsistencia: la suma de N por establecimiento (${sumN}) no coincide con el total (${AGG.total}).</p>`);
-  }
+  const warn = document.getElementById('cmpWarning');
+  warn.innerHTML = sumN !== AGG.total
+    ? `<p class="caveat" style="color:var(--bad); border-color:var(--bad)">⚠ Inconsistencia: la suma de N por establecimiento (${sumN}) no coincide con el total (${AGG.total}).</p>` : '';
+}
+
+/* Cross-navigation (diagnóstico #5, docs/rediseno_ux.md): salta de un
+   hallazgo agregado (tabla de establecimientos, mapa de transiciones) a
+   las trayectorias individuales que lo explican, en vez de dejar al
+   usuario buscando manualmente sin ninguna pista. */
+function goToTrayectoriasForEst(estId){
+  navigateTo('trayectorias');
+  document.getElementById('fEst').value = estId;
+  document.getElementById('fEstado').value = '';
+  document.getElementById('fSearch').value = '';
+  renderPatientList();
 }
 
 function renderAssumptionsTable(){
@@ -937,21 +1093,25 @@ function renderSimulator(){
   update();
 }
 
-/* ---------- tabs ---------- */
-function setupTabs(){
-  const tabs = Array.from(document.querySelectorAll('.tab'));
+/* ---------- navigation (left rail, by question) ---------- */
+const VIEW_TITLES = {
+  general:'Visión general', transiciones:'Transiciones', trayectorias:'Trayectorias',
+  cohortes:'Cohortes', establecimientos:'Establecimientos', simulador:'Simulador', fuentes:'Supuestos y fuentes',
+};
+let navigateTo = ()=>{}; // assigned in setupNav(); goToTrayectoriasForEst() calls this directly
+function setupNav(){
+  const links = Array.from(document.querySelectorAll('.navlink'));
   function show(view){
-    tabs.forEach(t=>t.setAttribute('aria-selected', t.dataset.view===view));
+    if(!VIEW_TITLES[view]) view = 'general';
+    links.forEach(t=>t.setAttribute('aria-current', t.dataset.view===view));
     document.querySelectorAll('.view').forEach(v=> v.hidden = v.id !== 'view-'+view);
+    document.getElementById('viewTitle').textContent = VIEW_TITLES[view];
     if(location.hash.slice(1) !== view) history.replaceState(null,'','#'+view);
   }
-  tabs.forEach(t=> t.addEventListener('click', ()=> show(t.dataset.view)));
-  window.addEventListener('hashchange', ()=>{
-    const v = location.hash.slice(1);
-    if(tabs.some(t=>t.dataset.view===v)) show(v);
-  });
-  const initial = location.hash.slice(1);
-  show(tabs.some(t=>t.dataset.view===initial) ? initial : 'resumen');
+  navigateTo = show;
+  links.forEach(t=> t.addEventListener('click', ()=> show(t.dataset.view)));
+  window.addEventListener('hashchange', ()=> show(location.hash.slice(1)));
+  show(location.hash.slice(1) || 'general');
 }
 
 /* ---------- init ---------- */
@@ -959,8 +1119,9 @@ function init(){
   renderKPIs();
   renderSpark();
   renderRiskCompare();
-  renderFunnel();
+  renderHeatmap();
   renderEpisodeTable();
+  renderCohortTables();
   renderComparisonTable();
   renderAssumptionsTable();
   renderPatientFilters();
@@ -969,7 +1130,7 @@ function init(){
   document.getElementById('fEstado').addEventListener('change', renderPatientList);
   document.getElementById('fSearch').addEventListener('input', renderPatientList);
   renderSimulator();
-  setupTabs();
+  setupNav();
   setupTestHook();
 }
 init();
