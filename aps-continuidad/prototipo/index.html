@@ -210,20 +210,20 @@ table.cmp tbody tr.linkable:hover{background:var(--panel-2)}
 
 <div class="shell">
 <nav class="rail">
-  <div class="brand"><b>APS Continuidad</b><br>PSCV · hipertensión · cohorte sintética</div>
+  <div class="brand"><b>APS Continuidad</b><br>CESFAM ficticio único · PSCV · hipertensión</div>
   <div class="grouplabel">Explorar</div>
   <button class="navlink" data-view="general">Visión general<span class="q">¿cuánta pérdida hay, y crece?</span></button>
   <button class="navlink" data-view="transiciones">Transiciones<span class="q">¿en qué mes ocurre?</span></button>
   <button class="navlink" data-view="trayectorias">Trayectorias<span class="q">¿cómo es un caso?</span></button>
   <div class="grouplabel">Comparar</div>
   <button class="navlink" data-view="cohortes">Cohortes<span class="q">¿quién difiere, y cómo?</span></button>
-  <button class="navlink" data-view="establecimientos">Establecimientos<span class="q">¿el sistema o el centro?</span></button>
+  <button class="navlink" data-view="establecimientos">Sectores<span class="q">¿el sistema o el equipo?</span></button>
   <div class="grouplabel">Interpretar</div>
   <button class="navlink" data-view="simulador">Simulador<span class="q">¿y si cambiara X?</span></button>
   <button class="navlink" data-view="fuentes">Supuestos y fuentes<span class="q">¿qué de esto es real?</span></button>
 </nav>
 <div class="main">
-  <div class="synline"><b>Datos sintéticos.</b><span>Cohorte generada artificialmente; ninguna cifra describe pacientes o establecimientos reales. Fuentes reales y supuestos del generador en «Supuestos y fuentes».</span></div>
+  <div class="synline"><b>Datos sintéticos.</b><span>Cohorte generada artificialmente, simulando un único CESFAM ficticio; ninguna cifra describe pacientes, sectores o centros reales. Fuentes reales y supuestos del generador en «Supuestos y fuentes».</span></div>
   <div class="topline">
     <h1 id="viewTitle">Visión general</h1>
     <div class="meta">N=420 · VENTANA 24m · SEMILLA 20261117</div>
@@ -235,7 +235,7 @@ table.cmp tbody tr.linkable:hover{background:var(--panel-2)}
       <div class="section">
         <div class="q">¿Cuánta pérdida hay?</div>
         <h2>Una de cada cinco personas tuvo al menos un episodio de pérdida de seguimiento</h2>
-        <p class="lede">420 pacientes hipertensos simulados, ingresados entre los meses 1 y 19 de una ventana de 24 meses, en 6 establecimientos ficticios con distinto desempeño basal. Cada celda de la franja indica su numerador, denominador y población elegible — pasa el cursor o lee la definición bajo cada número.</p>
+        <p class="lede">420 pacientes hipertensos simulados, ingresados entre los meses 1 y 19 de una ventana de 24 meses, en un único CESFAM ficticio organizado en 6 sectores/equipos internos con distinto desempeño basal. Cada celda de la franja indica su numerador, denominador y población elegible — pasa el cursor o lee la definición bajo cada número.</p>
         <div class="mstrip" id="kpiGrid"></div>
       </div>
 
@@ -261,12 +261,12 @@ table.cmp tbody tr.linkable:hover{background:var(--panel-2)}
     <div class="content">
       <div class="section">
         <div class="q">¿En qué mes del seguimiento se concentra la pérdida?</div>
-        <h2>Composición de estado mes a mes, por establecimiento</h2>
-        <p class="lede">Cada fila es un establecimiento ficticio; cada celda, un mes, coloreada por el % de su población activa que está perdida de seguimiento ese mes exacto — no acumulado al cierre. Esta es la pregunta que un embudo de una sola cifra final no puede responder: <em>cuándo</em>, no solo <em>cuánto</em>. Haz clic en el nombre de un establecimiento para ver sus trayectorias individuales.</p>
+        <h2>Composición de estado mes a mes, por sector del CESFAM</h2>
+        <p class="lede">Cada fila es un sector/equipo interno del mismo CESFAM ficticio (no un centro distinto); cada celda, un mes, coloreada por el % de su población activa que está perdida de seguimiento ese mes exacto — no acumulado al cierre. Esta es la pregunta que un embudo de una sola cifra final no puede responder: <em>cuándo</em>, no solo <em>cuánto</em>. Haz clic en el nombre de un sector para ver sus trayectorias individuales.</p>
         <div class="panel"><div class="pb"><div class="heat-wrap" id="heatmap"></div>
           <div class="heat-scale">Menor % perdido <div class="ramp"></div> Mayor % perdido</div>
         </div></div>
-        <p class="caveat">La escala de color es relativa al rango observado en esta cohorte sintética (no a un umbral clínico). Los seis establecimientos tienen parámetros arbitrarios — ver Supuestos y fuentes.</p>
+        <p class="caveat">La escala de color es relativa al rango observado en esta cohorte sintética (no a un umbral clínico). Los seis sectores tienen parámetros arbitrarios, elegidos para poder probar el filtro — no reflejan ninguna brecha real documentada entre equipos de un CESFAM.</p>
       </div>
     </div>
   </section>
@@ -328,13 +328,13 @@ table.cmp tbody tr.linkable:hover{background:var(--panel-2)}
     </div>
   </section>
 
-  <!-- ===================== ESTABLECIMIENTOS ===================== -->
+  <!-- ===================== SECTORES ===================== -->
   <section class="view" id="view-establecimientos" hidden>
     <div class="content">
       <div class="section">
-        <div class="q">¿Es el sistema o es el centro (ficticio)?</div>
-        <h2>Comparación entre establecimientos sintéticos</h2>
-        <p class="lede">Los nombres y parámetros son ficticios y arbitrarios — no representan diferencias documentadas entre centros reales de ningún tipo. Cada fila reutiliza exactamente las mismas fórmulas que la Visión general, aplicadas al subconjunto de ese establecimiento. Haz clic en una fila para ver sus trayectorias.</p>
+        <div class="q">¿Es el sistema o es el sector/equipo?</div>
+        <h2>Comparación entre sectores de un mismo CESFAM ficticio</h2>
+        <p class="lede">Un solo CESFAM ficticio, dividido en 6 sectores/equipos internos (no centros distintos) — nombres y parámetros arbitrarios, no representan diferencias documentadas entre equipos reales de ningún tipo. Cada fila reutiliza exactamente las mismas fórmulas que la Visión general, aplicadas al subconjunto de pacientes de ese sector. Haz clic en una fila para ver sus trayectorias.</p>
         <div class="panel"><div class="pb"><table class="cmp" id="cmpTable"></table><div id="cmpWarning"></div></div></div>
       </div>
     </div>
@@ -400,7 +400,7 @@ table.cmp tbody tr.linkable:hover{background:var(--panel-2)}
                 <div class="v tabular" id="simCompensation">—</div>
               </div>
             </div>
-            <p class="sim-note">Este número es solo contexto: la compensación depende de una probabilidad propia de cada establecimiento al momento del control, <strong>no</strong> de los controles 1 y 2 de arriba. HEARTS (Barake et al. 2022) reportó una mejora real de compensación poblacional de 16% a 33% — un resultado sobre compensación clínica, no sobre inasistencia ni urgencias/hospitalizaciones, por lo que deliberadamente no se usa como parámetro de los controles 1 y 2.</p>
+            <p class="sim-note">Este número es solo contexto: la compensación depende de una probabilidad propia de cada sector al momento del control, <strong>no</strong> de los controles 1 y 2 de arriba. HEARTS (Barake et al. 2022) reportó una mejora real de compensación poblacional de 16% a 33% — un resultado sobre compensación clínica, no sobre inasistencia ni urgencias/hospitalizaciones, por lo que deliberadamente no se usa como parámetro de los controles 1 y 2.</p>
             <p class="sim-note">Evaluar si una intervención real reduce la pérdida, mejora la compensación o reduce eventos adversos requiere un diseño experimental o cuasiexperimental con datos reales (Etapa IV de la propuesta de investigación), no una extrapolación de este simulador.</p>
           </div>
         </div>
@@ -425,7 +425,7 @@ table.cmp tbody tr.linkable:hover{background:var(--panel-2)}
           <div><span class="tag real">Real</span>Escobar-San Martín, Droguett Droguett &amp; Sabando Franulic (2026). <em>Sociodemographic determinants of appointment no-show in primary care: a cross-sectional study in Renca Commune, Chile (2022–2023).</em> BMC Primary Care. DOI: 10.1186/s12875-025-03170-9 — estudio chileno de referencia para el fenómeno de inasistencia que motiva este proyecto.</div>
           <div><span class="tag real">Real</span>Werner et al. (2023). <em>Behavioural economic interventions to reduce health care appointment non-attendance: a systematic review and meta-analysis.</em> BMC Health Services Research. DOI: 10.1186/s12913-023-10059-9 — base conceptual del control "efectividad de rescate / contacto proactivo" del simulador; su propio metanálisis reporta intervalos de confianza amplios, citados tal cual en el simulador.</div>
           <div><span class="tag real">Real</span>Bastías et al. (2024). <em>Factores sociales y de salud relacionados a la discontinuidad de los tratamientos en adultos chilenos con enfermedades crónicas durante la pandemia por COVID-19.</em> Rev Méd Chile 152(10). DOI: 10.4067/s0034-98872024001001038 — reporta 12% de discontinuidad de tratamiento en HTA durante la pandemia.</div>
-          <div><span class="tag syn">Sintético</span>Los 420 pacientes, sus 6 establecimientos, calendarios de control, resultados de rescate y eventos adversos son generados por un algoritmo con semilla fija. No describen a ninguna persona ni establecimiento real.</div>
+          <div><span class="tag syn">Sintético</span>Los 420 pacientes, el CESFAM ficticio único y sus 6 sectores internos, calendarios de control, resultados de rescate y eventos adversos son generados por un algoritmo con semilla fija. No describen a ninguna persona, sector ni centro real.</div>
         </div>
         <p class="foot-source" style="margin:16px 0 0; padding-top:12px">Catálogo completo de fuentes reales, con URLs, fechas de descarga y limitaciones, en <code>aps-continuidad/docs/catalogo_fuentes.md</code>. Auditoría metodológica completa en <code>aps-continuidad/docs/auditoria_metodologica.md</code>.</p>
         </div></div>
@@ -486,12 +486,12 @@ const ASSUMPTIONS = {
 };
 
 const ESTAB = [
-  {id:'E1', name:'Establecimiento ficticio A', attendance:0.82, rescue:0.52, compensation:0.52},
-  {id:'E2', name:'Establecimiento ficticio B', attendance:0.74, rescue:0.42, compensation:0.44},
-  {id:'E3', name:'Establecimiento ficticio C', attendance:0.68, rescue:0.36, compensation:0.38},
-  {id:'E4', name:'Establecimiento ficticio D', attendance:0.63, rescue:0.30, compensation:0.34},
-  {id:'E5', name:'Establecimiento ficticio E', attendance:0.58, rescue:0.26, compensation:0.30},
-  {id:'E6', name:'Establecimiento ficticio F', attendance:0.55, rescue:0.22, compensation:0.27},
+  {id:'E1', name:'Sector A', attendance:0.82, rescue:0.52, compensation:0.52},
+  {id:'E2', name:'Sector B', attendance:0.74, rescue:0.42, compensation:0.44},
+  {id:'E3', name:'Sector C', attendance:0.68, rescue:0.36, compensation:0.38},
+  {id:'E4', name:'Sector D', attendance:0.63, rescue:0.30, compensation:0.34},
+  {id:'E5', name:'Sector E', attendance:0.58, rescue:0.26, compensation:0.30},
+  {id:'E6', name:'Sector F', attendance:0.55, rescue:0.22, compensation:0.27},
 ];
 
 /* ---------- generate synthetic cohort ----------
@@ -794,7 +794,7 @@ function renderHeatmap(){
   }
   host.innerHTML = rows.map(r=>`
     <div class="heat-row">
-      <div class="hname" data-est="${r.est.id}" title="Ver trayectorias de ${r.est.name}">${r.est.name.replace('Establecimiento ficticio ','Ficticio ')}</div>
+      <div class="hname" data-est="${r.est.id}" title="Ver trayectorias de ${r.est.name}">${r.est.name}</div>
       <div class="heat-cells">${r.shares.map((v,m)=>
         `<div class="heat-cell" style="background:${v===null?'transparent':mix(Math.min(1,v/max))}" title="${r.est.name} · mes ${dm(m)} · ${v===null?'sin pacientes ingresados aún':fmtPct(v)+' perdidos ese mes'}"></div>`
       ).join('')}</div>
@@ -850,7 +850,7 @@ function renderComparisonTable(){
     return {id:e.id, name:e.name, n:ps.length, a};
   });
   table.innerHTML = `
-    <tr><th>Establecimiento (ficticio)</th><th class="num">N</th><th class="num">% pérdida (cruda)</th><th class="num">% compensación (última visita)</th><th class="num">% rescate exitoso</th></tr>
+    <tr><th>Sector (CESFAM ficticio único)</th><th class="num">N</th><th class="num">% pérdida (cruda)</th><th class="num">% compensación (última visita)</th><th class="num">% rescate exitoso</th></tr>
     ${rows.map(r=>`
       <tr class="linkable" data-est="${r.id}" title="Ver trayectorias de ${r.name}">
         <td>${r.name}</td>
@@ -866,7 +866,7 @@ function renderComparisonTable(){
   const sumN = rows.reduce((s,r)=>s+r.n,0);
   const warn = document.getElementById('cmpWarning');
   warn.innerHTML = sumN !== AGG.total
-    ? `<p class="caveat" style="color:var(--bad); border-color:var(--bad)">⚠ Inconsistencia: la suma de N por establecimiento (${sumN}) no coincide con el total (${AGG.total}).</p>` : '';
+    ? `<p class="caveat" style="color:var(--bad); border-color:var(--bad)">⚠ Inconsistencia: la suma de N por sector (${sumN}) no coincide con el total (${AGG.total}).</p>` : '';
 }
 
 /* Cross-navigation (diagnóstico #5, docs/rediseno_ux.md): salta de un
@@ -894,7 +894,7 @@ function renderAssumptionsTable(){
     ['Reingreso tras evento adverso (estando perdido)', (A.reengagePAfterAdverseWhileLost*100).toFixed(0)+'%', 'Arbitrario.'],
     ['Tipo de evento adverso', (A.adverseUrgenciaShare*100).toFixed(0)+'% urgencia / '+((1-A.adverseUrgenciaShare)*100).toFixed(0)+'% hospitalización', 'Arbitrario.'],
     ['Seguimiento mínimo para indicador ajustado', A.minFollowUpForAdjustedLostPct+' meses de seguimiento posible', 'Elegido para reducir (no eliminar) el sesgo de tiempo de seguimiento desigual entre pacientes con ingreso temprano y tardío.'],
-    ['Gradiente de desempeño entre establecimientos', 'Asistencia 55–82%, rescate 22–52%, compensación 27–52%', 'Arbitrario; solo busca que la tabla comparativa tenga variación para probar el filtro, no refleja ninguna brecha real documentada.'],
+    ['Gradiente de desempeño entre sectores (mismo CESFAM)', 'Asistencia 55–82%, rescate 22–52%, compensación 27–52%', 'Arbitrario; solo busca que la tabla comparativa tenga variación para probar el filtro, no refleja ninguna brecha real documentada entre equipos de un CESFAM.'],
   ];
   table.innerHTML = `
     <tr><th>Supuesto</th><th>Valor</th><th>Origen / advertencia</th></tr>
@@ -956,7 +956,7 @@ let selectedPatientId = null;
 
 function renderPatientFilters(){
   const fEst = document.getElementById('fEst');
-  fEst.innerHTML = '<option value="">Todos los establecimientos</option>' +
+  fEst.innerHTML = '<option value="">Todos los sectores</option>' +
     ESTAB.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
 }
 
@@ -974,7 +974,7 @@ function renderPatientList(){
   list.innerHTML = filtered.slice(0,150).map(p=>{
     const st = patientStatus(p);
     return `<div class="patient-row ${p.id===selectedPatientId?'active':''}" data-id="${p.id}">
-      <div><div class="pid">${p.id}</div><div class="meta">${p.est.name.replace('Establecimiento ficticio ','E')} · ${p.age}a · ${p.sex}${p.episodesLost>1?' · '+p.episodesLost+' episodios':''}</div></div>
+      <div><div class="pid">${p.id}</div><div class="meta">${p.est.name} · ${p.age}a · ${p.sex}${p.episodesLost>1?' · '+p.episodesLost+' episodios':''}</div></div>
       <span class="pill ${st.cls}">${st.label}</span>
     </div>`;
   }).join('') || '<div class="sub" style="padding:14px">Sin resultados.</div>';
@@ -1104,7 +1104,7 @@ function renderSimulator(){
 /* ---------- navigation (left rail, by question) ---------- */
 const VIEW_TITLES = {
   general:'Visión general', transiciones:'Transiciones', trayectorias:'Trayectorias',
-  cohortes:'Cohortes', establecimientos:'Establecimientos', simulador:'Simulador', fuentes:'Supuestos y fuentes',
+  cohortes:'Cohortes', establecimientos:'Sectores', simulador:'Simulador', fuentes:'Supuestos y fuentes',
 };
 let navigateTo = ()=>{}; // assigned in setupNav(); goToTrayectoriasForEst() calls this directly
 function setupNav(){
