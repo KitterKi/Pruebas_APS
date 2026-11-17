@@ -1,0 +1,781 @@
+<title>APS Continuidad</title>
+<style>
+/* Layout concept: clinical console — sticky tab bar switches between four
+   analysis views; each view is a scrollable single-column stack of cards. */
+:root{
+  --bg:#f3f5f3; --surface:#ffffff; --surface-2:#eaf0ee; --border:#d7e0dc;
+  --fg:#16211c; --muted:#5b6d66;
+  --accent:#1c6e8c; --accent-fg:#ffffff; --accent-soft:#e3eef2;
+  --accent2:#b5712b;
+  --good:#2e7d4f; --good-soft:#e5f3ea;
+  --warn:#9a6b11; --warn-soft:#f8eed7;
+  --bad:#af3b36; --bad-soft:#fae6e4;
+  --syn:#7a4fb0; --syn-soft:#efe6f7;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161a; --surface:#161f24; --surface-2:#1c2830; --border:#2b3a41;
+    --fg:#e8eef0; --muted:#93a7ad;
+    --accent:#4da9c4; --accent-fg:#0b1418; --accent-soft:#1b323c;
+    --accent2:#d4a05c;
+    --good:#5fb583; --good-soft:#163524;
+    --warn:#d4b24f; --warn-soft:#352c14;
+    --bad:#e2756f; --bad-soft:#3a1d1c;
+    --syn:#b394dd; --syn-soft:#2a2240;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161a; --surface:#161f24; --surface-2:#1c2830; --border:#2b3a41;
+  --fg:#e8eef0; --muted:#93a7ad;
+  --accent:#4da9c4; --accent-fg:#0b1418; --accent-soft:#1b323c;
+  --accent2:#d4a05c;
+  --good:#5fb583; --good-soft:#163524;
+  --warn:#d4b24f; --warn-soft:#352c14;
+  --bad:#e2756f; --bad-soft:#3a1d1c;
+  --syn:#b394dd; --syn-soft:#2a2240;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+}
+h1,h2,h3,.disp{font-family:'Space Grotesk','Inter',system-ui,sans-serif; text-wrap:balance}
+.tabular{font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+.wrap{max-width:980px; margin:0 auto; padding-block:18px 60px}
+
+/* synthetic data banner */
+.synbar{
+  position:sticky; top:0; z-index:20; margin:0 calc(-1 * max(16px, env(safe-area-inset-left,0px))) 0 calc(-1 * max(16px, env(safe-area-inset-right,0px)));
+  background:var(--syn-soft); border-bottom:1px solid var(--syn);
+}
+.synbar-inner{
+  max-width:980px; margin:0 auto; padding:9px max(16px, env(safe-area-inset-left,0px)) 9px max(16px, env(safe-area-inset-right,0px));
+  display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+}
+.synbar b{color:var(--syn); font-family:'Space Grotesk',sans-serif; letter-spacing:.02em}
+.synbar span{color:var(--muted); font-size:.85rem}
+
+header.top{padding-top:20px}
+header.top .eyebrow{color:var(--accent); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; font-weight:600}
+header.top h1{font-size:1.9rem; margin:.25rem 0 .4rem; line-height:1.15}
+header.top p{color:var(--muted); max-width:62ch; margin:0 0 18px; line-height:1.5}
+
+/* tab nav */
+.tabs{
+  display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:20px;
+  overflow-x:auto;
+}
+.tab{
+  font:inherit; font-family:'Space Grotesk',sans-serif; font-size:.92rem;
+  background:none; border:none; color:var(--muted); cursor:pointer;
+  padding:9px 14px; border-bottom:2px solid transparent; white-space:nowrap;
+}
+.tab[aria-selected="true"]{color:var(--accent); border-bottom-color:var(--accent); font-weight:600}
+.tab:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.view{display:flex; flex-direction:column; gap:18px}
+.view[hidden]{display:none}
+
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:12px;
+  padding:16px 18px;
+}
+.card h2{font-size:1.05rem; margin:0 0 4px}
+.card .sub{color:var(--muted); font-size:.85rem; margin:0 0 14px; line-height:1.45}
+
+.kpi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px}
+.kpi{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
+  padding:12px 14px; display:flex; flex-direction:column; gap:4px; min-width:0;
+}
+.kpi .label{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
+.kpi .value{font-family:'Space Grotesk',sans-serif; font-size:1.7rem; line-height:1}
+.kpi .delta{font-size:.78rem}
+.kpi .delta.good{color:var(--good)} .kpi .delta.bad{color:var(--bad)} .kpi .delta.warn{color:var(--warn)}
+
+.pill{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:.75rem; font-weight:600; white-space:nowrap}
+.pill.good{background:var(--good-soft); color:var(--good)}
+.pill.warn{background:var(--warn-soft); color:var(--warn)}
+.pill.bad{background:var(--bad-soft); color:var(--bad)}
+.pill.accent{background:var(--accent-soft); color:var(--accent)}
+
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:.78rem; color:var(--muted); margin-top:8px}
+.legend .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle}
+
+.foot-source{font-size:.78rem; color:var(--muted); border-top:1px dashed var(--border); margin-top:10px; padding-top:8px; line-height:1.5}
+
+/* trayectorias view */
+.traj-layout{display:grid; grid-template-columns:260px 1fr; gap:16px}
+@media (max-width:760px){.traj-layout{grid-template-columns:1fr}}
+.filters{display:flex; flex-direction:column; gap:8px}
+.filters select, .filters input{
+  font:inherit; background:var(--surface-2); border:1px solid var(--border); color:var(--fg);
+  border-radius:8px; padding:7px 9px; width:100%;
+}
+.patient-list{max-height:420px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; margin-top:8px}
+.patient-row{
+  display:flex; justify-content:space-between; gap:8px; align-items:center;
+  padding:8px 10px; border-bottom:1px solid var(--border); cursor:pointer; font-size:.82rem;
+}
+.patient-row:last-child{border-bottom:none}
+.patient-row:hover{background:var(--surface-2)}
+.patient-row.active{background:var(--accent-soft)}
+.patient-row .pid{font-family:'Space Grotesk',sans-serif; font-weight:600}
+.patient-row .meta{color:var(--muted); font-size:.74rem}
+
+.timeline-svg{width:100%; height:auto; display:block}
+.chronology{list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:5px; font-size:.82rem; max-height:220px; overflow-y:auto}
+.chronology li{display:flex; gap:8px; align-items:baseline}
+.chronology .m{color:var(--muted); min-width:52px; font-variant-numeric:tabular-nums}
+
+/* comparison table */
+table.cmp{width:100%; border-collapse:collapse; font-size:.85rem}
+table.cmp th, table.cmp td{text-align:left; padding:7px 8px; border-bottom:1px solid var(--border)}
+table.cmp th{color:var(--muted); font-weight:600; font-size:.74rem; text-transform:uppercase; letter-spacing:.03em}
+table.cmp td.num{font-variant-numeric:tabular-nums; text-align:right}
+table.cmp tr:last-child td{border-bottom:none}
+
+/* simulator */
+.sim-controls{display:flex; flex-direction:column; gap:16px}
+.slider-row label{display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:6px}
+.slider-row input[type=range]{width:100%; accent-color:var(--accent)}
+.toggle-row{display:flex; align-items:center; gap:10px; font-size:.88rem}
+.toggle-row input{width:18px; height:18px; accent-color:var(--accent)}
+.sim-compare{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px}
+@media (max-width:600px){.sim-compare{grid-template-columns:1fr}}
+.sim-box{background:var(--surface-2); border-radius:10px; padding:12px 14px; border:1px solid var(--border)}
+.sim-box h3{margin:0 0 8px; font-size:.82rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; font-weight:600}
+.sim-box .big{font-family:'Space Grotesk',sans-serif; font-size:1.6rem}
+.sim-note{font-size:.78rem; color:var(--muted); margin-top:10px; line-height:1.5}
+
+.src-list{display:flex; flex-direction:column; gap:10px; font-size:.86rem; line-height:1.5}
+.src-list .tag{font-size:.68rem; font-weight:700; padding:2px 7px; border-radius:5px; margin-right:7px; text-transform:uppercase; letter-spacing:.03em}
+.tag.real{background:var(--good-soft); color:var(--good)}
+.tag.syn{background:var(--syn-soft); color:var(--syn)}
+</style>
+
+<div class="synbar"><div class="synbar-inner">
+  <b>⚠ DATOS SINTÉTICOS</b>
+  <span>Este prototipo usa una cohorte de pacientes generada artificialmente para explorar el concepto de continuidad asistencial. Ninguna cifra representa pacientes, establecimientos o estadísticas reales. Las fuentes reales usadas como referencia están citadas en la pestaña "Fuentes".</span>
+</div></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Prototipo de exploración · Noviembre 2026</div>
+    <h1>APS Continuidad</h1>
+    <p>Entorno de análisis para investigar dónde se interrumpe el seguimiento de pacientes hipertensos en el Programa de Salud Cardiovascular (PSCV) de la Atención Primaria chilena. Esta versión trabaja con una cohorte sintética de 420 pacientes para validar el diseño de las herramientas antes de solicitar acceso a datos institucionales reales.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Vistas del prototipo">
+    <button class="tab" role="tab" data-view="resumen" aria-selected="true">Resumen</button>
+    <button class="tab" role="tab" data-view="trayectorias" aria-selected="false">Trayectorias</button>
+    <button class="tab" role="tab" data-view="comparacion" aria-selected="false">Embudo &amp; comparación</button>
+    <button class="tab" role="tab" data-view="simulador" aria-selected="false">Simulador</button>
+    <button class="tab" role="tab" data-view="fuentes" aria-selected="false">Fuentes</button>
+  </nav>
+
+  <!-- ===================== RESUMEN ===================== -->
+  <section class="view" id="view-resumen">
+    <div class="card">
+      <h2>Población bajo control — cohorte sintética</h2>
+      <p class="sub">420 pacientes hipertensos simulados, ingresados entre los meses 0 y 18 de una ventana de observación de 24 meses, distribuidos en 6 establecimientos ficticios con distinto desempeño basal.</p>
+      <div class="kpi-grid" id="kpiGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2>Población activa en el tiempo</h2>
+      <p class="sub">Pacientes con seguimiento vigente por mes de observación (sintético). La caída progresiva ilustra cómo se va perdiendo continuidad incluso sin eventos agudos.</p>
+      <svg id="sparkActive" class="timeline-svg" viewBox="0 0 900 180"></svg>
+    </div>
+
+    <div class="card">
+      <h2>¿Dónde aparece el riesgo?</h2>
+      <p class="sub">Comparación simple entre quienes nunca perdieron continuidad y quienes la perdieron al menos una vez, respecto de la aparición posterior de un evento de urgencia u hospitalización por causa cardiovascular (correlación en datos sintéticos — no es evidencia de causalidad).</p>
+      <div id="riskCompare"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TRAYECTORIAS ===================== -->
+  <section class="view" id="view-trayectorias" hidden>
+    <div class="card">
+      <h2>Trayectorias individuales</h2>
+      <p class="sub">Reconstrucción longitudinal de un paciente: ingreso, controles asistidos/no asistidos, intentos de rescate, pérdida de seguimiento y eventos posteriores. Selecciona un paciente para ver su línea de tiempo.</p>
+      <div class="traj-layout">
+        <div class="filters">
+          <select id="fEst"></select>
+          <select id="fEstado">
+            <option value="">Todos los estados</option>
+            <option value="activo">Activo, continuidad regular</option>
+            <option value="rescatado">Tuvo inasistencia, fue rescatado</option>
+            <option value="perdido">Perdido de seguimiento (actual)</option>
+            <option value="evento">Con evento adverso registrado</option>
+          </select>
+          <input id="fSearch" type="text" placeholder="Buscar por ID (ej: P-014)">
+          <div class="patient-list" id="patientList"></div>
+        </div>
+        <div>
+          <div id="trajEmpty" class="sub" style="padding:30px 0; text-align:center">Selecciona un paciente de la lista para ver su trayectoria.</div>
+          <div id="trajDetail" hidden>
+            <div id="trajHeader" style="margin-bottom:10px"></div>
+            <svg id="trajSvg" class="timeline-svg" viewBox="0 0 900 140"></svg>
+            <div class="legend" id="trajLegend"></div>
+            <ol class="chronology" id="trajChrono"></ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EMBUDO & COMPARACION ===================== -->
+  <section class="view" id="view-comparacion" hidden>
+    <div class="card">
+      <h2>Embudo de continuidad</h2>
+      <p class="sub">De los 420 ingresos sintéticos, cuántos conservan cada etapa de la continuidad asistencial a lo largo de la ventana de observación.</p>
+      <svg id="funnelSvg" class="timeline-svg" viewBox="0 0 900 320"></svg>
+    </div>
+
+    <div class="card">
+      <h2>Comparación entre establecimientos (sintéticos)</h2>
+      <p class="sub">Los nombres son ficticios. El propósito es mostrar cómo el prototipo permitiría comparar desempeño real entre centros una vez conectado a datos institucionales.</p>
+      <table class="cmp" id="cmpTable"></table>
+    </div>
+  </section>
+
+  <!-- ===================== SIMULADOR ===================== -->
+  <section class="view" id="view-simulador" hidden>
+    <div class="card">
+      <h2>Simulador de intervención</h2>
+      <p class="sub">Proyección simplificada (escalamiento lineal, no un modelo validado) de cómo cambiarían la pérdida de seguimiento y los eventos adversos si se modifica la efectividad del rescate de inasistentes y se agrega contacto proactivo temprano. El punto de partida (38% de rescate exitoso) se inspira en el rango de mejora reportado para la estrategia HEARTS en Chile (OPS/MINSAL, 2022): la tasa de control poblacional de hipertensión subió de 16% a 33% tras su implementación.</p>
+      <div class="sim-controls">
+        <div class="slider-row">
+          <label for="rescueSlider"><span>Efectividad del rescate de inasistentes</span><span class="tabular" id="rescueVal">38%</span></label>
+          <input type="range" id="rescueSlider" min="10" max="90" value="38">
+        </div>
+        <div class="toggle-row">
+          <input type="checkbox" id="proactiveToggle">
+          <label for="proactiveToggle">Agregar contacto proactivo temprano (recordatorio antes del primer control vencido)</label>
+        </div>
+      </div>
+      <div class="sim-compare">
+        <div class="sim-box">
+          <h3>Situación actual (cohorte sintética)</h3>
+          <div class="big tabular" id="simBaseLost">—</div>
+          <div class="sub" style="margin:2px 0 10px">pérdida de seguimiento acumulada</div>
+          <div class="big tabular" id="simBaseEvt">—</div>
+          <div class="sub" style="margin:2px 0">eventos adversos proyectados</div>
+        </div>
+        <div class="sim-box" style="border-color:var(--accent)">
+          <h3 style="color:var(--accent)">Escenario simulado</h3>
+          <div class="big tabular" id="simNewLost">—</div>
+          <div class="sub" style="margin:2px 0 10px" id="simLostDelta">—</div>
+          <div class="big tabular" id="simNewEvt">—</div>
+          <div class="sub" style="margin:2px 0" id="simEvtDelta">—</div>
+        </div>
+      </div>
+      <p class="sim-note">Esta proyección es solo ilustrativa: asume una relación lineal entre efectividad de rescate y pérdida de seguimiento para fines de diseño de la interfaz. Evaluar intervenciones reales requiere un diseño experimental o cuasiexperimental (Etapa IV de la propuesta de investigación).</p>
+    </div>
+  </section>
+
+  <!-- ===================== FUENTES ===================== -->
+  <section class="view" id="view-fuentes" hidden>
+    <div class="card">
+      <h2>Fuentes reales usadas como referencia</h2>
+      <p class="sub">Documentos y bases efectivamente descargados y verificados en la etapa de investigación (ver <code>docs/catalogo_fuentes.md</code> del repositorio del proyecto). Se citan aquí para que ningún parámetro del prototipo parezca inventado sin origen.</p>
+      <div class="src-list">
+        <div><span class="tag real">Real</span>MINSAL/DEIS (2025). <em>Manual REM Serie P, v1.2</em> y planilla SP_25_V1.3 — define las variables de población bajo control y compensación de HTA en el PSCV.</div>
+        <div><span class="tag real">Real</span>MINSAL/DEIS (2025). <em>Manual Series REM A/BS/BM/D, v1.3</em> — define consultas y controles cardiovasculares en APS (REM-A04).</div>
+        <div><span class="tag real">Real</span>MINSAL (2026). <em>Glosa N°6 — Listas de Espera No GES y Garantías GES retrasadas</em>, corte junio 2026.</div>
+        <div><span class="tag real">Real</span>MINSAL/DEIS. <em>Lista Tabular CIE-10</em> (actualizada agosto 2026) — códigos I10–I15 (hipertensión) e I20–I25, I50, I60–I69, N18 (complicaciones) usados como referencia conceptual de desenlaces.</div>
+        <div><span class="tag real">Real</span>Barake et al. (2022). <em>Chile's public healthcare sector hypertension control rates before and during the pandemic and HEARTS implementation.</em> Rev Panam Salud Publica. DOI: 10.26633/RPSP.2022.126 — fuente del parámetro "16%→33% de control poblacional" usado en el simulador.</div>
+        <div><span class="tag real">Real</span>Escobar-San Martín, Droguett Droguett &amp; Sabando Franulic (2026). <em>Sociodemographic determinants of appointment no-show in primary care: a cross-sectional study in Renca Commune, Chile (2022–2023).</em> BMC Primary Care. DOI: 10.1186/s12875-025-03170-9 — estudio chileno de referencia para el fenómeno de inasistencia que motiva este proyecto.</div>
+        <div><span class="tag real">Real</span>Werner et al. (2023). <em>Behavioural economic interventions to reduce health care appointment non-attendance: a systematic review and meta-analysis.</em> BMC Health Services Research. DOI: 10.1186/s12913-023-10059-9 — base conceptual del módulo "Simulador de intervención" (recordatorios y rescate).</div>
+        <div><span class="tag real">Real</span>Bastías et al. (2024). <em>Factores sociales y de salud relacionados a la discontinuidad de los tratamientos en adultos chilenos con enfermedades crónicas durante la pandemia por COVID-19.</em> Rev Méd Chile 152(10). DOI: 10.4067/s0034-98872024001001038 — reporta 12% de discontinuidad de tratamiento en HTA durante la pandemia.</div>
+        <div><span class="tag syn">Sintético</span>Los 420 pacientes, sus 6 establecimientos, calendarios de control, resultados de rescate y eventos adversos son generados por un algoritmo con semilla fija, parametrizado de forma ilustrativa a partir de los rangos reportados en las fuentes reales anteriores. No describen a ninguna persona ni establecimiento real.</div>
+      </div>
+      <p class="foot-source">Catálogo completo, con URLs, fechas de descarga y limitaciones detalladas, en <code>aps-continuidad/docs/catalogo_fuentes.md</code> del repositorio del proyecto.</p>
+    </div>
+  </section>
+
+  <p class="foot-source" style="margin-top:10px">APS Continuidad — prototipo de exploración, etapa de diagnóstico y diseño (noviembre–diciembre 2026). No sustituye criterio clínico ni constituye un sistema de uso en producción.</p>
+</div>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<script>
+(function(){
+"use strict";
+
+/* ---------- seeded PRNG ---------- */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rnd = mulberry32(20261117);
+
+const HORIZON = 24; // months observed
+
+/* ---------- establishments ---------- */
+const ESTAB = [
+  {id:'E1', name:'CESFAM Modelo Norte',    attendance:0.82, rescue:0.52, compensation:0.52},
+  {id:'E2', name:'CESFAM Modelo Centro',   attendance:0.74, rescue:0.42, compensation:0.44},
+  {id:'E3', name:'CESFAM Modelo Oriente',  attendance:0.68, rescue:0.36, compensation:0.38},
+  {id:'E4', name:'CESFAM Modelo Sur',      attendance:0.63, rescue:0.30, compensation:0.34},
+  {id:'E5', name:'CESFAM Modelo Costa',    attendance:0.58, rescue:0.26, compensation:0.30},
+  {id:'E6', name:'CESFAM Modelo Rural',    attendance:0.55, rescue:0.22, compensation:0.27},
+];
+
+/* ---------- generate synthetic cohort ---------- */
+function genPatients(n){
+  const patients = [];
+  for(let i=0;i<n;i++){
+    const est = ESTAB[Math.floor(rnd()*ESTAB.length)];
+    const ingreso = Math.floor(rnd()*19); // 0..18
+    const age = 35 + Math.floor(rnd()*53);
+    const sex = rnd() < 0.56 ? 'F' : 'M';
+    const frailty = rnd(); // 0..1 patient-level risk, affects attendance slightly
+
+    const events = [{month:ingreso, type:'ingreso'}];
+    let lost = false, lostSince = null, consecutiveMiss = 0, everLost = false, adverseEvent = null, reengaged = false;
+
+    const dueMonths = [];
+    for(let m = ingreso; m <= HORIZON-1; m += 3) dueMonths.push(m);
+
+    for(const m of dueMonths){
+      if(lost){
+        // small chance of spontaneous return even without an adverse event
+        if(rnd() < 0.05){
+          lost = false; consecutiveMiss = 0;
+          events.push({month:m, type:'reingreso'});
+        } else {
+          continue;
+        }
+      }
+      const attendProb = Math.min(0.95, est.attendance + (frailty-0.5)*-0.12);
+      const attended = rnd() < attendProb;
+      if(attended){
+        const compensado = rnd() < est.compensation;
+        events.push({month:m, type:'control', compensado});
+        consecutiveMiss = 0;
+      } else {
+        events.push({month:m, type:'no_asistio'});
+        consecutiveMiss++;
+        const rescueMonth = Math.min(m+1, HORIZON-1);
+        const rescued = rnd() < est.rescue;
+        events.push({month:rescueMonth, type: rescued ? 'rescate_exitoso' : 'rescate_fallido'});
+        if(rescued){
+          consecutiveMiss = 0;
+        } else if(consecutiveMiss >= 2){
+          lost = true; everLost = true; lostSince = rescueMonth;
+          events.push({month:rescueMonth, type:'perdido'});
+        }
+      }
+    }
+
+    // adverse-event risk while lost, month by month to horizon
+    if(lostSince !== null){
+      let monthsLost = 0;
+      for(let m = lostSince+1; m <= HORIZON-1; m++){
+        if(!lost) break;
+        monthsLost++;
+        const risk = Math.min(0.35, 0.03 * monthsLost);
+        if(rnd() < risk){
+          const type = rnd() < 0.7 ? 'urgencia' : 'hospitalizacion';
+          events.push({month:m, type});
+          adverseEvent = type;
+          if(rnd() < 0.6){
+            lost = false; reengaged = true;
+            events.push({month:Math.min(m+1,HORIZON-1), type:'reingreso_post_evento'});
+          }
+          break;
+        }
+      }
+    }
+
+    events.sort((a,b)=>a.month-b.month);
+    patients.push({
+      id:'P-'+String(i+1).padStart(3,'0'),
+      est, ingreso, age, sex, events,
+      everLost, lostNow: lost, adverseEvent, reengaged
+    });
+  }
+  return patients;
+}
+
+const PATIENTS = genPatients(420);
+
+/* ---------- aggregates ---------- */
+function computeAggregates(patients){
+  const total = patients.length;
+  const lostNow = patients.filter(p=>p.lostNow).length;
+  const everLost = patients.filter(p=>p.everLost).length;
+  let rescExitoso=0, rescFallido=0, controlesAsistidos=0, controlesCompensados=0, controlesProgramados=0;
+  patients.forEach(p=>{
+    p.events.forEach(e=>{
+      if(e.type==='rescate_exitoso') rescExitoso++;
+      if(e.type==='rescate_fallido') rescFallido++;
+      if(e.type==='control'){ controlesAsistidos++; if(e.compensado) controlesCompensados++; }
+      if(e.type==='control'||e.type==='no_asistio') controlesProgramados++;
+    });
+  });
+  const adverseAmongLost = patients.filter(p=>p.everLost && p.adverseEvent).length;
+  const adverseAmongNotLost = patients.filter(p=>!p.everLost && p.adverseEvent).length;
+  const notLostCount = total - everLost;
+  return {
+    total, lostNow, everLost,
+    lostPct: everLost/total,
+    rescueRate: rescExitoso/(rescExitoso+rescFallido || 1),
+    attendanceRate: controlesAsistidos/(controlesProgramados||1),
+    compensationRate: controlesCompensados/(controlesAsistidos||1),
+    adverseTotal: patients.filter(p=>p.adverseEvent).length,
+    adverseAmongLostPct: adverseAmongLost/(everLost||1),
+    adverseAmongNotLostPct: adverseAmongNotLost/(notLostCount||1),
+  };
+}
+const AGG = computeAggregates(PATIENTS);
+
+/* ---------- active population per month ---------- */
+function activeByMonth(patients){
+  const arr = new Array(HORIZON).fill(0);
+  for(let m=0;m<HORIZON;m++){
+    arr[m] = patients.filter(p=>{
+      if(p.ingreso>m) return false;
+      // active if, looking at events up to month m, not currently lost
+      let lost=false;
+      for(const e of p.events){
+        if(e.month>m) break;
+        if(e.type==='perdido') lost=true;
+        if(e.type==='reingreso'||e.type==='reingreso_post_evento') lost=false;
+      }
+      return !lost;
+    }).length;
+  }
+  return arr;
+}
+const ACTIVE_SERIES = activeByMonth(PATIENTS);
+
+/* ===================== rendering helpers ===================== */
+const svgNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){
+  const n = document.createElementNS(svgNS, tag);
+  for(const k in attrs) n.setAttribute(k, attrs[k]);
+  if(parent) parent.appendChild(n);
+  return n;
+}
+function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+function fmtPct(x){ return (x*100).toFixed(0)+'%'; }
+
+/* ---- KPI cards ---- */
+function renderKPIs(){
+  const grid = document.getElementById('kpiGrid');
+  const items = [
+    {label:'Población ingresada', value: AGG.total, delta:'cohorte sintética completa'},
+    {label:'Activos ahora (mes 24)', value: AGG.total-AGG.lostNow, delta: fmtPct((AGG.total-AGG.lostNow)/AGG.total)+' del total', cls:'good'},
+    {label:'Perdieron continuidad alguna vez', value: AGG.everLost, delta: fmtPct(AGG.lostPct)+' de la cohorte', cls:'bad'},
+    {label:'Tasa de rescate exitoso', value: fmtPct(AGG.rescueRate), delta:'de los intentos de rescate'},
+    {label:'% controles compensados', value: fmtPct(AGG.compensationRate), delta:'entre quienes asisten', cls: AGG.compensationRate>0.4?'good':'warn'},
+    {label:'Eventos adversos registrados', value: AGG.adverseTotal, delta:'urgencia u hospitalización', cls:'bad'},
+  ];
+  grid.innerHTML = items.map(it=>`
+    <div class="kpi">
+      <div class="label">${it.label}</div>
+      <div class="value tabular">${it.value}</div>
+      <div class="delta ${it.cls||''}">${it.delta}</div>
+    </div>`).join('');
+}
+
+/* ---- sparkline of active population ---- */
+function renderSpark(){
+  const svg = document.getElementById('sparkActive');
+  svg.innerHTML='';
+  const W=900,H=180, padL=40,padR=16,padT=16,padB=28;
+  const max = AGG.total, min=0;
+  const x = m => padL + (m/(HORIZON-1))*(W-padL-padR);
+  const y = v => H-padB - ((v-min)/(max-min))*(H-padT-padB);
+  const axis = cssVar('--border'), muted = cssVar('--muted'), accent = cssVar('--accent');
+
+  // gridlines
+  [0,0.5,1].forEach(f=>{
+    const v = max*f;
+    el('line',{x1:padL,x2:W-padR,y1:y(v),y2:y(v),stroke:axis,'stroke-width':1},svg);
+    el('text',{x:4,y:y(v)+4,fill:muted,'font-size':11},svg).textContent = Math.round(v);
+  });
+  // x labels every 6 months
+  for(let m=0;m<HORIZON;m+=6){
+    el('text',{x:x(m),y:H-8,fill:muted,'font-size':11,'text-anchor':'middle'},svg).textContent='m'+m;
+  }
+  // area + line
+  let dLine = '', dArea = '';
+  ACTIVE_SERIES.forEach((v,m)=>{
+    const px=x(m), py=y(v);
+    dLine += (m===0?'M':'L')+px+','+py+' ';
+  });
+  dArea = 'M'+x(0)+','+y(0)+' L'+ACTIVE_SERIES.map((v,m)=>x(m)+','+y(v)).join(' L')+' L'+x(HORIZON-1)+','+y(0)+' Z';
+  el('path',{d:dArea, fill:accent, opacity:0.12, stroke:'none'},svg);
+  el('path',{d:dLine, fill:'none', stroke:accent, 'stroke-width':2.5},svg);
+  el('circle',{cx:x(HORIZON-1), cy:y(ACTIVE_SERIES[HORIZON-1]), r:4, fill:accent},svg);
+}
+
+/* ---- risk comparison bars ---- */
+function renderRiskCompare(){
+  const host = document.getElementById('riskCompare');
+  const rows = [
+    {label:'Nunca perdieron continuidad', pct:AGG.adverseAmongNotLostPct, cls:'good'},
+    {label:'Perdieron continuidad alguna vez', pct:AGG.adverseAmongLostPct, cls:'bad'},
+  ];
+  host.innerHTML = rows.map(r=>`
+    <div style="margin-bottom:12px">
+      <div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:4px">
+        <span>${r.label}</span><span class="tabular pill ${r.cls}">${fmtPct(r.pct)}</span>
+      </div>
+      <div style="background:var(--surface-2); border-radius:6px; height:10px; overflow:hidden">
+        <div style="height:100%; width:${(r.pct*100).toFixed(1)}%; background:var(--${r.cls})"></div>
+      </div>
+    </div>`).join('') +
+    `<p class="sub" style="margin-top:4px">% de cada grupo con al menos un evento de urgencia u hospitalización registrado durante la ventana de observación.</p>`;
+}
+
+/* ---- funnel ---- */
+function renderFunnel(){
+  const svg = document.getElementById('funnelSvg');
+  svg.innerHTML='';
+  const total = AGG.total;
+  const conControl = PATIENTS.filter(p=>p.events.some(e=>e.type==='control')).length;
+  const regular = PATIENTS.filter(p=>!p.everLost).length;
+  const rescatadosNoLost = PATIENTS.filter(p=>!p.everLost && p.events.some(e=>e.type==='rescate_exitoso')).length;
+  const perdidos = AGG.everLost;
+  const conEvento = PATIENTS.filter(p=>p.everLost && p.adverseEvent).length;
+
+  const stages = [
+    {label:'Ingresados al PSCV', n:total},
+    {label:'Con al menos 1 control asistido', n:conControl},
+    {label:'Continuidad regular (sin pérdida)', n:regular},
+    {label:'  — de ellos, con inasistencia rescatada', n:rescatadosNoLost},
+    {label:'Perdieron seguimiento en algún momento', n:perdidos},
+    {label:'  — con evento adverso posterior', n:conEvento},
+  ];
+  const W=900,H=320, rowH=46, maxW=640, startX=130;
+  const accent = cssVar('--accent'), bad=cssVar('--bad'), muted=cssVar('--muted'), fg=cssVar('--fg');
+  stages.forEach((s,i)=>{
+    const y = 10 + i*rowH;
+    const w = Math.max(6, (s.n/total)*maxW);
+    const color = i>=4 ? bad : accent;
+    const indent = s.label.startsWith('  —');
+    el('rect',{x:startX+(indent?20:0), y, width:w-(indent?20:0), height:26, rx:5, fill:color, opacity: indent?0.55:0.85},svg);
+    el('text',{x:startX-10, y:y+18, 'text-anchor':'end', fill:fg, 'font-size':13},svg).textContent = s.label.trim();
+    el('text',{x:startX+w+10+(indent?-20:0), y:y+18, fill:muted, 'font-size':13, 'font-weight':600},svg).textContent = s.n+' ('+fmtPct(s.n/total)+')';
+  });
+}
+
+/* ---- establishment comparison table ---- */
+function renderComparisonTable(){
+  const table = document.getElementById('cmpTable');
+  const rows = ESTAB.map(e=>{
+    const ps = PATIENTS.filter(p=>p.est.id===e.id);
+    const n = ps.length;
+    const lostPct = ps.filter(p=>p.everLost).length/n;
+    const comp = (()=>{
+      let asis=0, comped=0;
+      ps.forEach(p=>p.events.forEach(ev=>{ if(ev.type==='control'){asis++; if(ev.compensado) comped++;} }));
+      return comped/(asis||1);
+    })();
+    let resc=0, rescTot=0;
+    ps.forEach(p=>p.events.forEach(ev=>{
+      if(ev.type==='rescate_exitoso'){resc++; rescTot++;}
+      if(ev.type==='rescate_fallido'){rescTot++;}
+    }));
+    return {name:e.name, n, lostPct, comp, rescRate: resc/(rescTot||1)};
+  });
+  table.innerHTML = `
+    <tr><th>Establecimiento (ficticio)</th><th>N pacientes</th><th>% pérdida continuidad</th><th>% compensación HTA</th><th>% rescate exitoso</th></tr>
+    ${rows.map(r=>`
+      <tr>
+        <td>${r.name}</td>
+        <td class="num tabular">${r.n}</td>
+        <td class="num tabular">${fmtPct(r.lostPct)}</td>
+        <td class="num tabular">${fmtPct(r.comp)}</td>
+        <td class="num tabular">${fmtPct(r.rescRate)}</td>
+      </tr>`).join('')}
+  `;
+}
+
+/* ---- patient trajectory list + detail ---- */
+const EVENT_META = {
+  ingreso:            {label:'Ingreso al PSCV', color:'--accent'},
+  control:            {label:'Control asistido', color:'--good'},
+  no_asistio:         {label:'No asistió', color:'--bad'},
+  rescate_exitoso:    {label:'Rescate exitoso', color:'--accent2'},
+  rescate_fallido:    {label:'Rescate sin éxito', color:'--bad'},
+  perdido:            {label:'Pérdida de seguimiento', color:'--bad'},
+  reingreso:          {label:'Reingreso espontáneo', color:'--good'},
+  urgencia:           {label:'Atención de urgencia', color:'--warn'},
+  hospitalizacion:    {label:'Hospitalización', color:'--bad'},
+  reingreso_post_evento: {label:'Reingreso tras evento', color:'--good'},
+};
+
+function patientStatus(p){
+  if(p.lostNow) return {k:'perdido', label:'Perdido de seguimiento', cls:'bad'};
+  if(p.adverseEvent) return {k:'evento', label:'Evento adverso registrado', cls:'warn'};
+  if(p.events.some(e=>e.type==='rescate_exitoso')) return {k:'rescatado', label:'Rescatado, activo', cls:'accent'};
+  return {k:'activo', label:'Continuidad regular', cls:'good'};
+}
+
+let selectedPatientId = null;
+
+function renderPatientFilters(){
+  const fEst = document.getElementById('fEst');
+  fEst.innerHTML = '<option value="">Todos los establecimientos</option>' +
+    ESTAB.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+}
+
+function renderPatientList(){
+  const fEst = document.getElementById('fEst').value;
+  const fEstado = document.getElementById('fEstado').value;
+  const q = document.getElementById('fSearch').value.trim().toLowerCase();
+  const list = document.getElementById('patientList');
+  const filtered = PATIENTS.filter(p=>{
+    if(fEst && p.est.id!==fEst) return false;
+    if(fEstado && patientStatus(p).k!==fEstado) return false;
+    if(q && !p.id.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  list.innerHTML = filtered.slice(0,150).map(p=>{
+    const st = patientStatus(p);
+    return `<div class="patient-row ${p.id===selectedPatientId?'active':''}" data-id="${p.id}">
+      <div><div class="pid">${p.id}</div><div class="meta">${p.est.name.replace('CESFAM Modelo ','')} · ${p.age}a · ${p.sex}</div></div>
+      <span class="pill ${st.cls}">${st.label}</span>
+    </div>`;
+  }).join('') || '<div class="sub" style="padding:14px">Sin resultados.</div>';
+
+  list.querySelectorAll('.patient-row').forEach(row=>{
+    row.addEventListener('click', ()=>{ selectedPatientId = row.dataset.id; renderPatientList(); renderTrajectory(); });
+  });
+}
+
+function renderTrajectory(){
+  const p = PATIENTS.find(x=>x.id===selectedPatientId);
+  document.getElementById('trajEmpty').hidden = !!p;
+  document.getElementById('trajDetail').hidden = !p;
+  if(!p) return;
+
+  const st = patientStatus(p);
+  document.getElementById('trajHeader').innerHTML = `
+    <strong style="font-family:'Space Grotesk',sans-serif; font-size:1.1rem">${p.id}</strong>
+    <span class="pill ${st.cls}" style="margin-left:8px">${st.label}</span>
+    <div class="sub" style="margin-top:4px">${p.est.name} · ${p.age} años · ${p.sex==='F'?'Femenino':'Masculino'} · ingresó en el mes ${p.ingreso}</div>
+  `;
+
+  const svg = document.getElementById('trajSvg');
+  svg.innerHTML='';
+  const W=900,H=140, padL=20,padR=20,padT=20,padB=28;
+  const x = m => padL + (m/(HORIZON-1))*(W-padL-padR);
+  const midY = (H-padT-padB)/2+padT;
+  const muted = cssVar('--muted');
+
+  el('line',{x1:padL,x2:W-padR,y1:midY,y2:midY,stroke:cssVar('--border'),'stroke-width':2},svg);
+  for(let m=0;m<HORIZON;m+=6) el('text',{x:x(m),y:H-8,'text-anchor':'middle',fill:muted,'font-size':11},svg).textContent='mes '+m;
+
+  // shade "lost" band if applicable
+  const perdidoEvt = p.events.find(e=>e.type==='perdido');
+  if(perdidoEvt){
+    const endEvt = p.events.find(e=> (e.type==='reingreso'||e.type==='reingreso_post_evento') && e.month>perdidoEvt.month);
+    const endM = endEvt ? endEvt.month : HORIZON-1;
+    el('rect',{x:x(perdidoEvt.month), y:padT, width:Math.max(2,x(endM)-x(perdidoEvt.month)), height:H-padT-padB, fill:cssVar('--bad'), opacity:0.08},svg);
+  }
+
+  p.events.forEach(e=>{
+    const meta = EVENT_META[e.type];
+    const color = cssVar(meta.color);
+    const cy = (e.type==='control'||e.type==='no_asistio') ? midY : midY + (e.type.includes('rescate')?-26:26);
+    const c = el('circle',{cx:x(e.month), cy, r: e.type==='control'||e.type==='no_asistio'?6:5, fill:color},svg);
+    el('title',{},c).textContent = meta.label+' (mes '+e.month+')';
+  });
+
+  document.getElementById('trajLegend').innerHTML = Object.entries(EVENT_META).map(([k,m])=>
+    `<span><span class="dot" style="background:${cssVar(m.color)}"></span>${m.label}</span>`).join('');
+
+  document.getElementById('trajChrono').innerHTML = p.events.map(e=>
+    `<li><span class="m">Mes ${e.month}</span><span>${EVENT_META[e.type].label}${e.type==='control'?(e.compensado?' · compensada':' · no compensada'):''}</span></li>`
+  ).join('');
+}
+
+/* ---- simulator ---- */
+function renderSimulator(){
+  const slider = document.getElementById('rescueSlider');
+  const toggle = document.getElementById('proactiveToggle');
+  const baseRescue = AGG.rescueRate;
+  const baseLostPct = AGG.lostPct;
+  const baseAdverse = AGG.adverseTotal;
+
+  document.getElementById('simBaseLost').textContent = fmtPct(baseLostPct);
+  document.getElementById('simBaseEvt').textContent = baseAdverse;
+
+  function update(){
+    const newRescue = +slider.value/100;
+    document.getElementById('rescueVal').textContent = Math.round(newRescue*100)+'%';
+    let ratio = (1-newRescue)/(1-baseRescue);
+    if(toggle.checked) ratio *= 0.85;
+    ratio = Math.max(0.15, Math.min(1.6, ratio));
+    const newLostPct = Math.min(0.95, baseLostPct*ratio);
+    const newAdverse = Math.round(baseAdverse*ratio);
+
+    document.getElementById('simNewLost').textContent = fmtPct(newLostPct);
+    document.getElementById('simNewEvt').textContent = newAdverse;
+    const lostDelta = newLostPct-baseLostPct;
+    const evtDelta = newAdverse-baseAdverse;
+    const dl = document.getElementById('simLostDelta');
+    dl.textContent = (lostDelta<=0?'↓ ':'↑ ')+Math.abs(lostDelta*100).toFixed(1)+' pp vs. actual';
+    dl.style.color = lostDelta<=0 ? cssVar('--good') : cssVar('--bad');
+    const de = document.getElementById('simEvtDelta');
+    de.textContent = (evtDelta<=0?'↓ ':'↑ ')+Math.abs(evtDelta)+' vs. actual';
+    de.style.color = evtDelta<=0 ? cssVar('--good') : cssVar('--bad');
+  }
+  slider.addEventListener('input', update);
+  toggle.addEventListener('change', update);
+  update();
+}
+
+/* ---------- tabs ---------- */
+function setupTabs(){
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  function show(view){
+    tabs.forEach(t=>t.setAttribute('aria-selected', t.dataset.view===view));
+    document.querySelectorAll('.view').forEach(v=> v.hidden = v.id !== 'view-'+view);
+    if(location.hash.slice(1) !== view) history.replaceState(null,'','#'+view);
+  }
+  tabs.forEach(t=> t.addEventListener('click', ()=> show(t.dataset.view)));
+  window.addEventListener('hashchange', ()=>{
+    const v = location.hash.slice(1);
+    if(tabs.some(t=>t.dataset.view===v)) show(v);
+  });
+  const initial = location.hash.slice(1);
+  show(tabs.some(t=>t.dataset.view===initial) ? initial : 'resumen');
+}
+
+/* ---------- init ---------- */
+function init(){
+  renderKPIs();
+  renderSpark();
+  renderRiskCompare();
+  renderFunnel();
+  renderComparisonTable();
+  renderPatientFilters();
+  renderPatientList();
+  document.getElementById('fEst').addEventListener('change', renderPatientList);
+  document.getElementById('fEstado').addEventListener('change', renderPatientList);
+  document.getElementById('fSearch').addEventListener('input', renderPatientList);
+  renderSimulator();
+  setupTabs();
+}
+init();
+
+})();
+</script>
