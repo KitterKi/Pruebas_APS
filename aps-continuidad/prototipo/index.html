@@ -225,6 +225,7 @@ table.cmp tr:last-child td{border-bottom:none}
             <option value="">Todos los estados</option>
             <option value="activo">Activo, sin episodios de pérdida</option>
             <option value="rescatado">Tuvo inasistencia, fue rescatado</option>
+            <option value="egreso">Egreso del programa (defunción/traslado)</option>
             <option value="perdido">Perdido de seguimiento (al cierre)</option>
             <option value="evento">Con ≥1 evento adverso registrado</option>
           </select>
@@ -746,20 +747,41 @@ function renderAssumptionsTable(){
 }
 
 /* ---- patient trajectory list + detail ---- */
+/* Each event is tagged with `cat` (clínico / administrativo / contacto) per
+   la auditoría de noviembre 2026 — ver docs/modelo_trayectoria_aps.md punto 3
+   ("no asumas que toda interrupción es responsabilidad del paciente"). Los
+   seis eventos marcados "(ampliación nov-2026)" no los produce el generador
+   aleatorio de 420 pacientes: existen para que los escenarios manuales de
+   docs/modelo_trayectoria_aps.md se puedan representar en esta vista, tal
+   como pide esa fase de trabajo. */
 const EVENT_META = {
-  ingreso:            {label:'Ingreso al PSCV', color:'--accent'},
-  control:            {label:'Control asistido', color:'--good'},
-  no_asistio:         {label:'No asistió', color:'--bad'},
-  rescate_exitoso:    {label:'Rescate exitoso', color:'--accent2'},
-  rescate_fallido:    {label:'Rescate sin éxito', color:'--bad'},
-  perdido:            {label:'Inicio de episodio de pérdida', color:'--bad'},
-  reingreso:          {label:'Reingreso espontáneo', color:'--good'},
-  urgencia:           {label:'Atención de urgencia', color:'--warn'},
-  hospitalizacion:    {label:'Hospitalización', color:'--bad'},
-  reingreso_post_evento: {label:'Reingreso tras evento', color:'--good'},
+  ingreso:            {label:'Ingreso al PSCV', color:'--accent', cat:'clinico'},
+  control:            {label:'Control asistido', color:'--good', cat:'clinico'},
+  no_asistio:         {label:'Inasistencia registrada', color:'--bad', cat:'administrativo',
+                        note:'Causa no determinada por el registro: puede deberse al paciente, a un error de agenda o a falta de contacto previo.'},
+  rescate_exitoso:    {label:'Rescate exitoso', color:'--accent2', cat:'contacto'},
+  rescate_fallido:    {label:'Rescate sin éxito', color:'--bad', cat:'contacto'},
+  perdido:            {label:'Inicio de episodio de pérdida', color:'--bad', cat:'clinico'},
+  reingreso:          {label:'Reingreso espontáneo', color:'--good', cat:'contacto'},
+  urgencia:           {label:'Atención de urgencia', color:'--warn', cat:'clinico'},
+  hospitalizacion:    {label:'Hospitalización', color:'--bad', cat:'clinico'},
+  reingreso_post_evento: {label:'Reingreso tras evento', color:'--good', cat:'clinico'},
+  // --- ampliación nov-2026, solo para escenarios manuales ---
+  cancelado_establecimiento: {label:'Control cancelado por el establecimiento (sin cupos)', color:'--warn', cat:'administrativo'},
+  contacto_fallido:   {label:'Intento de contacto sin respuesta', color:'--warn', cat:'contacto'},
+  derivacion_especialidad: {label:'Derivación a especialidad', color:'--accent2', cat:'clinico'},
+  derivacion_establecimiento: {label:'Cambio de establecimiento (traslado administrativo)', color:'--accent2', cat:'administrativo'},
+  egreso_defuncion:   {label:'Egreso del programa — defunción', color:'--muted', cat:'clinico'},
+  egreso_traslado:    {label:'Egreso del programa — traslado a otro centro', color:'--muted', cat:'administrativo'},
 };
+const EVENT_CAT_LABEL = {clinico:'Clínico', administrativo:'Administrativo', contacto:'Contacto'};
 
 function patientStatus(p){
+  // Terminal, non-failure exits are checked first: dying or being formally
+  // transferred to another establishment is not a continuity failure and
+  // must not be displayed as "perdido" or implicitly blamed on the patient.
+  if(p.events.some(e=>e.type==='egreso_defuncion')) return {k:'egreso', label:'Egreso — defunción', cls:'accent'};
+  if(p.events.some(e=>e.type==='egreso_traslado')) return {k:'egreso', label:'Egreso — traslado administrativo', cls:'accent'};
   if(p.lostNow) return {k:'perdido', label:'Perdido de seguimiento', cls:'bad'};
   if(p.adverseEvents.length>0) return {k:'evento', label:'Con evento adverso registrado', cls:'warn'};
   if(p.events.some(e=>e.type==='rescate_exitoso')) return {k:'rescatado', label:'Rescatado, activo', cls:'accent'};
@@ -838,12 +860,18 @@ function renderTrajectory(){
     el('title',{},c).textContent = meta.label+' (mes '+dm(e.month)+')';
   });
 
-  document.getElementById('trajLegend').innerHTML = Object.entries(EVENT_META).map(([k,m])=>
-    `<span><span class="dot" style="background:${cssVar(m.color)}"></span>${m.label}</span>`).join('');
+  // Legend only lists the event types actually present in THIS trajectory
+  // (16 possible types would otherwise overwhelm a single patient's legend).
+  const typesPresent = [...new Set(p.events.map(e=>e.type))];
+  document.getElementById('trajLegend').innerHTML = typesPresent.map(k=>{
+    const m = EVENT_META[k];
+    return `<span><span class="dot" style="background:${cssVar(m.color)}"></span>${m.label} <em style="font-style:normal; opacity:.7">(${EVENT_CAT_LABEL[m.cat]})</em></span>`;
+  }).join('');
 
-  document.getElementById('trajChrono').innerHTML = p.events.map(e=>
-    `<li><span class="m">Mes ${dm(e.month)}</span><span>${EVENT_META[e.type].label}${e.type==='control'?(e.compensado?' · compensada':' · no compensada'):''}</span></li>`
-  ).join('');
+  document.getElementById('trajChrono').innerHTML = p.events.map(e=>{
+    const m = EVENT_META[e.type];
+    return `<li><span class="m">Mes ${dm(e.month)}</span><span>${m.label}${e.type==='control'?(e.compensado?' · compensada':' · no compensada'):''} <span class="pill" style="background:var(--surface-2); color:var(--muted); font-size:.68rem; padding:1px 6px">${EVENT_CAT_LABEL[m.cat]}</span></span></li>`;
+  }).join('');
 }
 
 /* ---- simulator ---- */
@@ -942,8 +970,58 @@ function init(){
   document.getElementById('fSearch').addEventListener('input', renderPatientList);
   renderSimulator();
   setupTabs();
+  setupTestHook();
 }
 init();
+
+/* ===================================================================
+   TEST HOOK — not part of the product UI. Lets the Playwright functional
+   tests in prototipo/test_trayectorias.mjs inject hand-authored patient
+   scenarios (docs/modelo_trayectoria_aps.md) into the real rendering
+   pipeline and inspect the result, without adding any visible control or
+   view. Building a patient object from a bare event list applies the same
+   defaults genPatients() would, so injected patients have a shape
+   consistent with generated ones. No-op unless called from outside. */
+function setupTestHook(){
+  window.__APS_TEST__ = {
+    addPatient(spec){
+      const events = spec.events.slice().sort((a,b)=>a.month-b.month);
+      const episodesLost = events.filter(e=>e.type==='perdido').length;
+      let lost = false;
+      events.forEach(e=>{
+        if(e.type==='perdido') lost = true;
+        if(e.type==='reingreso'||e.type==='reingreso_post_evento') lost = false;
+        if(e.type==='egreso_defuncion'||e.type==='egreso_traslado') lost = false;
+      });
+      const adverseEvents = events.filter(e=>e.type==='urgencia'||e.type==='hospitalizacion').map(e=>({month:e.month,type:e.type}));
+      const lastControl = events.filter(e=>e.type==='control').slice(-1)[0];
+      const patient = Object.assign({
+        id: spec.id,
+        est: spec.est || ESTAB[0],
+        ingreso: events[0] ? events[0].month : 0,
+        age: spec.age || 60,
+        sex: spec.sex || 'F',
+        events, adverseEvents,
+        everLost: episodesLost>0, episodesLost, lostNow: lost,
+        lastControlCompensado: lastControl ? !!lastControl.compensado : null,
+        dueOpportunities: spec.dueOpportunities || 1,
+        eligibleForAdjustedLostRate: false,
+      }, spec.overrides||{});
+      PATIENTS.push(patient);
+      renderPatientFilters();
+      renderPatientList();
+      return patient.id;
+    },
+    selectPatient(id){
+      selectedPatientId = id;
+      renderPatientList();
+      renderTrajectory();
+    },
+    getPatient(id){ return PATIENTS.find(p=>p.id===id); },
+    patientStatus,
+    EVENT_META,
+  };
+}
 
 })();
 </script>
