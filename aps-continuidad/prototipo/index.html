@@ -940,7 +940,15 @@ function patientStatus(p){
   if(p.events.some(e=>e.type==='egreso_traslado')) return {k:'egreso', label:'Egreso — traslado administrativo', cls:'accent'};
   if(p.lostNow) return {k:'perdido', label:'Perdido de seguimiento', cls:'bad'};
   if(p.adverseEvents.length>0) return {k:'evento', label:'Con evento adverso registrado', cls:'warn'};
-  if(p.events.some(e=>e.type==='rescate_exitoso')) return {k:'rescatado', label:'Rescatado, activo', cls:'accent'};
+  // Bug found by the Trayectorias functional tests (docs/modelo_trayectoria_aps.md,
+  // escenario S-03): checking only for a 'rescate_exitoso' EVENT missed patients
+  // who recovered from a completed loss episode spontaneously ('reingreso', no
+  // rescue event at all) — they fell through to "Sin episodios de pérdida",
+  // which is false whenever episodesLost>0. A second functional test (S-02)
+  // showed the opposite failure mode: a patient with exactly one missed control
+  // that WAS rescued before ever reaching the loss threshold (episodesLost===0)
+  // also deserves this label, not the default. Both signals are needed.
+  if(p.episodesLost>0 || p.events.some(e=>e.type==='rescate_exitoso')) return {k:'rescatado', label:'Rescatado, activo', cls:'accent'};
   return {k:'activo', label:'Sin episodios de pérdida', cls:'good'};
 }
 
