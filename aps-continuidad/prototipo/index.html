@@ -87,7 +87,13 @@ header.top p{color:var(--muted); max-width:62ch; margin:0 0 18px; line-height:1.
   padding:16px 18px;
 }
 .card h2{font-size:1.05rem; margin:0 0 4px}
+.card h3.sec{font-size:.88rem; margin:16px 0 6px; color:var(--fg)}
 .card .sub{color:var(--muted); font-size:.85rem; margin:0 0 14px; line-height:1.45}
+.card .note{
+  font-size:.8rem; color:var(--muted); background:var(--surface-2); border:1px dashed var(--border);
+  border-radius:8px; padding:9px 11px; line-height:1.5; margin-top:10px;
+}
+.card .note b{color:var(--fg)}
 
 .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px}
 .kpi{
@@ -98,6 +104,7 @@ header.top p{color:var(--muted); max-width:62ch; margin:0 0 18px; line-height:1.
 .kpi .value{font-family:'Space Grotesk',sans-serif; font-size:1.7rem; line-height:1}
 .kpi .delta{font-size:.78rem}
 .kpi .delta.good{color:var(--good)} .kpi .delta.bad{color:var(--bad)} .kpi .delta.warn{color:var(--warn)}
+.kpi .def{font-size:.68rem; color:var(--muted); line-height:1.3}
 
 .pill{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:.75rem; font-weight:600; white-space:nowrap}
 .pill.good{background:var(--good-soft); color:var(--good)}
@@ -134,7 +141,7 @@ header.top p{color:var(--muted); max-width:62ch; margin:0 0 18px; line-height:1.
 .chronology li{display:flex; gap:8px; align-items:baseline}
 .chronology .m{color:var(--muted); min-width:52px; font-variant-numeric:tabular-nums}
 
-/* comparison table */
+/* tables (comparison, episodes, assumptions) */
 table.cmp{width:100%; border-collapse:collapse; font-size:.85rem}
 table.cmp th, table.cmp td{text-align:left; padding:7px 8px; border-bottom:1px solid var(--border)}
 table.cmp th{color:var(--muted); font-weight:600; font-size:.74rem; text-transform:uppercase; letter-spacing:.03em}
@@ -145,6 +152,7 @@ table.cmp tr:last-child td{border-bottom:none}
 .sim-controls{display:flex; flex-direction:column; gap:16px}
 .slider-row label{display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:6px}
 .slider-row input[type=range]{width:100%; accent-color:var(--accent)}
+.slider-row .hint{font-size:.74rem; color:var(--muted); margin-top:4px}
 .toggle-row{display:flex; align-items:center; gap:10px; font-size:.88rem}
 .toggle-row input{width:18px; height:18px; accent-color:var(--accent)}
 .sim-compare{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px}
@@ -153,6 +161,7 @@ table.cmp tr:last-child td{border-bottom:none}
 .sim-box h3{margin:0 0 8px; font-size:.82rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; font-weight:600}
 .sim-box .big{font-family:'Space Grotesk',sans-serif; font-size:1.6rem}
 .sim-note{font-size:.78rem; color:var(--muted); margin-top:10px; line-height:1.5}
+.sim-divider{border-top:1px dashed var(--border); margin:16px 0}
 
 .src-list{display:flex; flex-direction:column; gap:10px; font-size:.86rem; line-height:1.5}
 .src-list .tag{font-size:.68rem; font-weight:700; padding:2px 7px; border-radius:5px; margin-right:7px; text-transform:uppercase; letter-spacing:.03em}
@@ -162,20 +171,20 @@ table.cmp tr:last-child td{border-bottom:none}
 
 <div class="synbar"><div class="synbar-inner">
   <b>⚠ DATOS SINTÉTICOS</b>
-  <span>Este prototipo usa una cohorte de pacientes generada artificialmente para explorar el concepto de continuidad asistencial. Ninguna cifra representa pacientes, establecimientos o estadísticas reales. Las fuentes reales usadas como referencia están citadas en la pestaña "Fuentes".</span>
+  <span>Este prototipo usa una cohorte de pacientes generada artificialmente para explorar el concepto de continuidad asistencial. Ninguna cifra representa pacientes, establecimientos o estadísticas reales. Las fuentes reales usadas como referencia, y todos los supuestos inyectados por el generador, están en la pestaña "Fuentes".</span>
 </div></div>
 
 <div class="wrap">
   <header class="top">
-    <div class="eyebrow">Prototipo de exploración · Noviembre 2026</div>
+    <div class="eyebrow">Prototipo de exploración · Auditado noviembre 2026</div>
     <h1>APS Continuidad</h1>
-    <p>Entorno de análisis para investigar dónde se interrumpe el seguimiento de pacientes hipertensos en el Programa de Salud Cardiovascular (PSCV) de la Atención Primaria chilena. Esta versión trabaja con una cohorte sintética de 420 pacientes para validar el diseño de las herramientas antes de solicitar acceso a datos institucionales reales.</p>
+    <p>Entorno de análisis para investigar dónde se interrumpe el seguimiento de pacientes hipertensos en el Programa de Salud Cardiovascular (PSCV) de la Atención Primaria chilena. Esta versión trabaja con una cohorte sintética de 420 pacientes para validar el diseño de las herramientas antes de solicitar acceso a datos institucionales reales. Tras una auditoría metodológica (ver <code>docs/auditoria_metodologica.md</code>), el generador ahora modela episodios de pérdida múltiples por paciente y expone explícitamente cada supuesto de riesgo.</p>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Vistas del prototipo">
     <button class="tab" role="tab" data-view="resumen" aria-selected="true">Resumen</button>
     <button class="tab" role="tab" data-view="trayectorias" aria-selected="false">Trayectorias</button>
-    <button class="tab" role="tab" data-view="comparacion" aria-selected="false">Embudo &amp; comparación</button>
+    <button class="tab" role="tab" data-view="comparacion" aria-selected="false">Continuidad &amp; comparación</button>
     <button class="tab" role="tab" data-view="simulador" aria-selected="false">Simulador</button>
     <button class="tab" role="tab" data-view="fuentes" aria-selected="false">Fuentes</button>
   </nav>
@@ -184,20 +193,23 @@ table.cmp tr:last-child td{border-bottom:none}
   <section class="view" id="view-resumen">
     <div class="card">
       <h2>Población bajo control — cohorte sintética</h2>
-      <p class="sub">420 pacientes hipertensos simulados, ingresados entre los meses 0 y 18 de una ventana de observación de 24 meses, distribuidos en 6 establecimientos ficticios con distinto desempeño basal.</p>
+      <p class="sub">420 pacientes hipertensos simulados, ingresados entre los meses 1 y 19 de una ventana de observación de 24 meses, distribuidos en 6 establecimientos ficticios con distinto desempeño basal (parámetros arbitrarios, ver pestaña "Fuentes"). Cada indicador indica su numerador, denominador y población elegible.</p>
       <div class="kpi-grid" id="kpiGrid"></div>
     </div>
 
     <div class="card">
       <h2>Población activa en el tiempo</h2>
-      <p class="sub">Pacientes con seguimiento vigente por mes de observación (sintético). La caída progresiva ilustra cómo se va perdiendo continuidad incluso sin eventos agudos.</p>
+      <p class="sub">Numerador: pacientes ya ingresados y no clasificados como "perdidos" al mes <em>m</em>. Denominador: cohorte total (420). Ventana: meses 1–24. La caída progresiva ilustra episodios de pérdida; las recuperaciones (espontáneas o tras un rescate/evento) también quedan reflejadas, por lo que la curva puede subir, no solo bajar.</p>
       <svg id="sparkActive" class="timeline-svg" viewBox="0 0 900 180"></svg>
     </div>
 
     <div class="card">
       <h2>¿Dónde aparece el riesgo?</h2>
-      <p class="sub">Comparación simple entre quienes nunca perdieron continuidad y quienes la perdieron al menos una vez, respecto de la aparición posterior de un evento de urgencia u hospitalización por causa cardiovascular (correlación en datos sintéticos — no es evidencia de causalidad).</p>
+      <p class="sub">% de cada grupo con al menos un evento de urgencia u hospitalización durante toda la ventana de observación. Grupos: pacientes que <strong>nunca</strong> tuvieron un episodio de pérdida de seguimiento vs. pacientes que tuvieron <strong>al menos uno</strong>.</p>
       <div id="riskCompare"></div>
+      <div class="note">
+        <b>Esto no es un hallazgo.</b> El generador asigna explícitamente un riesgo mensual de evento basal (bajo, mientras el paciente está en seguimiento) y un riesgo mensual creciente mientras el paciente está "perdido" (ver valores exactos y su justificación en Fuentes → Supuestos del generador). La diferencia entre ambos grupos es, en gran medida, la consecuencia directa de esos parámetros programados, no un patrón descubierto en los datos. Con datos reales, esta misma vista permitiría evaluar si la asociación persiste, se atenúa o se explica por otros factores.
+      </div>
     </div>
   </section>
 
@@ -205,16 +217,16 @@ table.cmp tr:last-child td{border-bottom:none}
   <section class="view" id="view-trayectorias" hidden>
     <div class="card">
       <h2>Trayectorias individuales</h2>
-      <p class="sub">Reconstrucción longitudinal de un paciente: ingreso, controles asistidos/no asistidos, intentos de rescate, pérdida de seguimiento y eventos posteriores. Selecciona un paciente para ver su línea de tiempo.</p>
+      <p class="sub">Reconstrucción longitudinal de un paciente: ingreso, controles asistidos/no asistidos, intentos de rescate, episodios de pérdida (puede haber más de uno), reingresos y eventos adversos. Selecciona un paciente para ver su línea de tiempo completa.</p>
       <div class="traj-layout">
         <div class="filters">
           <select id="fEst"></select>
           <select id="fEstado">
             <option value="">Todos los estados</option>
-            <option value="activo">Activo, continuidad regular</option>
+            <option value="activo">Activo, sin episodios de pérdida</option>
             <option value="rescatado">Tuvo inasistencia, fue rescatado</option>
-            <option value="perdido">Perdido de seguimiento (actual)</option>
-            <option value="evento">Con evento adverso registrado</option>
+            <option value="perdido">Perdido de seguimiento (al cierre)</option>
+            <option value="evento">Con ≥1 evento adverso registrado</option>
           </select>
           <input id="fSearch" type="text" placeholder="Buscar por ID (ej: P-014)">
           <div class="patient-list" id="patientList"></div>
@@ -232,17 +244,20 @@ table.cmp tr:last-child td{border-bottom:none}
     </div>
   </section>
 
-  <!-- ===================== EMBUDO & COMPARACION ===================== -->
+  <!-- ===================== CONTINUIDAD & COMPARACION ===================== -->
   <section class="view" id="view-comparacion" hidden>
     <div class="card">
-      <h2>Embudo de continuidad</h2>
-      <p class="sub">De los 420 ingresos sintéticos, cuántos conservan cada etapa de la continuidad asistencial a lo largo de la ventana de observación.</p>
-      <svg id="funnelSvg" class="timeline-svg" viewBox="0 0 900 320"></svg>
+      <h2>Estado de continuidad al cierre de la ventana</h2>
+      <p class="sub">La continuidad asistencial no es un proceso de una sola vía: un mismo paciente puede tener varias inasistencias, rescates y reingresos antes del mes 24. Esta vista muestra, por eso, dos ramas (nunca perdido / perdió alguna vez) en lugar de un embudo de una sola dirección, más la distribución de cuántos episodios de pérdida tuvo cada paciente.</p>
+      <svg id="funnelSvg" class="timeline-svg" viewBox="0 0 900 300"></svg>
+      <h3 class="sec">Episodios de pérdida de seguimiento por paciente</h3>
+      <p class="sub">Un episodio = un ciclo completo de ≥2 controles trimestrales consecutivos no asistidos con rescate fallido, hasta el siguiente reingreso (espontáneo o tras un evento adverso). Un paciente puede acumular más de uno dentro de la ventana de 24 meses.</p>
+      <table class="cmp" id="episodeTable"></table>
     </div>
 
     <div class="card">
       <h2>Comparación entre establecimientos (sintéticos)</h2>
-      <p class="sub">Los nombres son ficticios. El propósito es mostrar cómo el prototipo permitiría comparar desempeño real entre centros una vez conectado a datos institucionales.</p>
+      <p class="sub">Los nombres y parámetros son ficticios y arbitrarios — no representan diferencias documentadas entre centros reales de ningún tipo (urbano/rural u otro). Cada fila reutiliza exactamente las mismas fórmulas que las tarjetas de Resumen, aplicadas al subconjunto de pacientes de ese establecimiento.</p>
       <table class="cmp" id="cmpTable"></table>
     </div>
   </section>
@@ -251,24 +266,34 @@ table.cmp tr:last-child td{border-bottom:none}
   <section class="view" id="view-simulador" hidden>
     <div class="card">
       <h2>Simulador de intervención</h2>
-      <p class="sub">Proyección simplificada (escalamiento lineal, no un modelo validado) de cómo cambiarían la pérdida de seguimiento y los eventos adversos si se modifica la efectividad del rescate de inasistentes y se agrega contacto proactivo temprano. El punto de partida (38% de rescate exitoso) se inspira en el rango de mejora reportado para la estrategia HEARTS en Chile (OPS/MINSAL, 2022): la tasa de control poblacional de hipertensión subió de 16% a 33% tras su implementación.</p>
-      <div class="sim-controls">
-        <div class="slider-row">
-          <label for="rescueSlider"><span>Efectividad del rescate de inasistentes</span><span class="tabular" id="rescueVal">38%</span></label>
-          <input type="range" id="rescueSlider" min="10" max="90" value="38">
-        </div>
-        <div class="toggle-row">
-          <input type="checkbox" id="proactiveToggle">
-          <label for="proactiveToggle">Agregar contacto proactivo temprano (recordatorio antes del primer control vencido)</label>
-        </div>
+      <p class="sub">Proyección simplificada (no es un modelo validado ni un resultado esperado real). Separa tres supuestos que en la versión anterior estaban mezclados: (1) qué tan efectivo es el rescate de inasistentes, (2) si ese rescate realmente reduce la pérdida de seguimiento proyectada en este modelo, y (3) cuán fuerte se asume la relación entre pérdida de seguimiento y eventos adversos — un vínculo que este prototipo <strong>no</strong> toma de ningún estudio real.</p>
+
+      <h3 class="sec">1 · Efectividad del rescate de inasistentes</h3>
+      <div class="slider-row">
+        <label for="rescueSlider"><span>Probabilidad de rescate exitoso tras una inasistencia</span><span class="tabular" id="rescueVal">—</span></label>
+        <input type="range" id="rescueSlider" min="10" max="90" value="50">
+        <div class="hint">El valor inicial corresponde a la tasa de rescate <em>realizada</em> en la cohorte sintética (no un número fijo). Los recordatorios y el rescate activo pueden mejorar la asistencia a citas — ver Werner et al. (2023), que reporta evidencia favorable pero con intervalos de confianza amplios (OR≈1.21, IC95% 0.41–2.00 para recordatorios por SMS) — esto <strong>no</strong> es el dato de HEARTS sobre compensación de hipertensión.</div>
       </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <input type="checkbox" id="proactiveToggle">
+        <label for="proactiveToggle">Agregar contacto proactivo temprano (recordatorio antes del primer control vencido)</label>
+      </div>
+
+      <div class="sim-divider"></div>
+      <h3 class="sec">2 · Fuerza asumida del vínculo "pérdida de seguimiento → evento adverso"</h3>
+      <div class="slider-row">
+        <label for="linkSlider"><span>Multiplicador sobre el efecto sin vínculo asumido (1,0× = igual que la cohorte base)</span><span class="tabular" id="linkVal">1,0×</span></label>
+        <input type="range" id="linkSlider" min="0" max="200" value="100">
+        <div class="hint">Este control no proviene de ningún estudio citado: existe para que puedas ver cuánto cambia la proyección de eventos adversos si se asume un vínculo más fuerte, más débil o nulo (0×) entre pérdida de continuidad y urgencia/hospitalización. Es, deliberadamente, el supuesto más especulativo del simulador.</div>
+      </div>
+
       <div class="sim-compare">
         <div class="sim-box">
           <h3>Situación actual (cohorte sintética)</h3>
           <div class="big tabular" id="simBaseLost">—</div>
-          <div class="sub" style="margin:2px 0 10px">pérdida de seguimiento acumulada</div>
+          <div class="sub" style="margin:2px 0 10px">pérdida de seguimiento acumulada (≥1 episodio)</div>
           <div class="big tabular" id="simBaseEvt">—</div>
-          <div class="sub" style="margin:2px 0">eventos adversos proyectados</div>
+          <div class="sub" style="margin:2px 0">pacientes con ≥1 evento adverso</div>
         </div>
         <div class="sim-box" style="border-color:var(--accent)">
           <h3 style="color:var(--accent)">Escenario simulado</h3>
@@ -278,7 +303,16 @@ table.cmp tr:last-child td{border-bottom:none}
           <div class="sub" style="margin:2px 0" id="simEvtDelta">—</div>
         </div>
       </div>
-      <p class="sim-note">Esta proyección es solo ilustrativa: asume una relación lineal entre efectividad de rescate y pérdida de seguimiento para fines de diseño de la interfaz. Evaluar intervenciones reales requiere un diseño experimental o cuasiexperimental (Etapa IV de la propuesta de investigación).</p>
+      <p class="sim-note" id="simFormula"></p>
+
+      <div class="sim-divider"></div>
+      <h3 class="sec">3 · Compensación de hipertensión (no modificada por este simulador)</h3>
+      <div class="sim-box" style="max-width:420px">
+        <h3>% compensados en su último control</h3>
+        <div class="big tabular" id="simCompensation">—</div>
+      </div>
+      <p class="sim-note">Este número se muestra solo como contexto: en este generador, la compensación depende de una probabilidad propia de cada establecimiento al momento del control, <strong>no</strong> de la efectividad de rescate ni del vínculo con eventos adversos de arriba, así que no cambia con los controles de este simulador. HEARTS (Barake et al. 2022) reportó una mejora real de compensación poblacional de 16% a 33% tras su implementación — ese resultado es sobre compensación clínica, no sobre inasistencia ni sobre urgencias/hospitalizaciones, por lo que deliberadamente no se usa como parámetro de los controles 1 y 2.</p>
+      <p class="sim-note">Evaluar si una intervención real reduce la pérdida de seguimiento, mejora la compensación o reduce eventos adversos requiere un diseño experimental o cuasiexperimental con datos reales (Etapa IV de la propuesta de investigación), no una extrapolación de este simulador.</p>
     </div>
   </section>
 
@@ -292,17 +326,21 @@ table.cmp tr:last-child td{border-bottom:none}
         <div><span class="tag real">Real</span>MINSAL/DEIS (2025). <em>Manual Series REM A/BS/BM/D, v1.3</em> — define consultas y controles cardiovasculares en APS (REM-A04).</div>
         <div><span class="tag real">Real</span>MINSAL (2026). <em>Glosa N°6 — Listas de Espera No GES y Garantías GES retrasadas</em>, corte junio 2026.</div>
         <div><span class="tag real">Real</span>MINSAL/DEIS. <em>Lista Tabular CIE-10</em> (actualizada agosto 2026) — códigos I10–I15 (hipertensión) e I20–I25, I50, I60–I69, N18 (complicaciones) usados como referencia conceptual de desenlaces.</div>
-        <div><span class="tag real">Real</span>Barake et al. (2022). <em>Chile's public healthcare sector hypertension control rates before and during the pandemic and HEARTS implementation.</em> Rev Panam Salud Publica. DOI: 10.26633/RPSP.2022.126 — fuente del parámetro "16%→33% de control poblacional" usado en el simulador.</div>
+        <div><span class="tag real">Real</span>Barake et al. (2022). <em>Chile's public healthcare sector hypertension control rates before and during the pandemic and HEARTS implementation.</em> Rev Panam Salud Publica. DOI: 10.26633/RPSP.2022.126 — citado en la pestaña Simulador como contraste explícito (compensación, no inasistencia ni eventos adversos); no se usa como parámetro directo de ningún control.</div>
         <div><span class="tag real">Real</span>Escobar-San Martín, Droguett Droguett &amp; Sabando Franulic (2026). <em>Sociodemographic determinants of appointment no-show in primary care: a cross-sectional study in Renca Commune, Chile (2022–2023).</em> BMC Primary Care. DOI: 10.1186/s12875-025-03170-9 — estudio chileno de referencia para el fenómeno de inasistencia que motiva este proyecto.</div>
-        <div><span class="tag real">Real</span>Werner et al. (2023). <em>Behavioural economic interventions to reduce health care appointment non-attendance: a systematic review and meta-analysis.</em> BMC Health Services Research. DOI: 10.1186/s12913-023-10059-9 — base conceptual del módulo "Simulador de intervención" (recordatorios y rescate).</div>
+        <div><span class="tag real">Real</span>Werner et al. (2023). <em>Behavioural economic interventions to reduce health care appointment non-attendance: a systematic review and meta-analysis.</em> BMC Health Services Research. DOI: 10.1186/s12913-023-10059-9 — base conceptual del control "efectividad de rescate / contacto proactivo" del simulador; su propio metanálisis reporta intervalos de confianza amplios, citados tal cual en el simulador.</div>
         <div><span class="tag real">Real</span>Bastías et al. (2024). <em>Factores sociales y de salud relacionados a la discontinuidad de los tratamientos en adultos chilenos con enfermedades crónicas durante la pandemia por COVID-19.</em> Rev Méd Chile 152(10). DOI: 10.4067/s0034-98872024001001038 — reporta 12% de discontinuidad de tratamiento en HTA durante la pandemia.</div>
-        <div><span class="tag syn">Sintético</span>Los 420 pacientes, sus 6 establecimientos, calendarios de control, resultados de rescate y eventos adversos son generados por un algoritmo con semilla fija, parametrizado de forma ilustrativa a partir de los rangos reportados en las fuentes reales anteriores. No describen a ninguna persona ni establecimiento real.</div>
+        <div><span class="tag syn">Sintético</span>Los 420 pacientes, sus 6 establecimientos, calendarios de control, resultados de rescate y eventos adversos son generados por un algoritmo con semilla fija. No describen a ninguna persona ni establecimiento real.</div>
       </div>
-      <p class="foot-source">Catálogo completo, con URLs, fechas de descarga y limitaciones detalladas, en <code>aps-continuidad/docs/catalogo_fuentes.md</code> del repositorio del proyecto.</p>
+      <p class="foot-source">Catálogo completo de fuentes reales, con URLs, fechas de descarga y limitaciones, en <code>aps-continuidad/docs/catalogo_fuentes.md</code>. Auditoría metodológica completa de este prototipo en <code>aps-continuidad/docs/auditoria_metodologica.md</code>.</p>
+
+      <h3 class="sec">Supuestos explícitos del generador (todos arbitrarios / ilustrativos, no calibrados con datos reales)</h3>
+      <p class="sub">Cada número en esta tabla fue elegido por el equipo para que el prototipo tuviera un comportamiento plausible, no estimado a partir de las fuentes reales anteriores salvo donde se indica. Esta tabla es la lista completa de "dónde se inyecta cada supuesto" que pide la auditoría metodológica.</p>
+      <table class="cmp" id="assumptionsTable"></table>
     </div>
   </section>
 
-  <p class="foot-source" style="margin-top:10px">APS Continuidad — prototipo de exploración, etapa de diagnóstico y diseño (noviembre–diciembre 2026). No sustituye criterio clínico ni constituye un sistema de uso en producción.</p>
+  <p class="foot-source" style="margin-top:10px">APS Continuidad — prototipo de exploración, etapa de diagnóstico y diseño (noviembre–diciembre 2026). No sustituye criterio clínico ni constituye un sistema de uso en producción. Ninguna asociación mostrada entre pérdida de continuidad y eventos adversos debe interpretarse como evidencia causal: todas se derivan de un generador sintético con parámetros declarados.</p>
 </div>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
@@ -310,7 +348,15 @@ table.cmp tr:last-child td{border-bottom:none}
 (function(){
 "use strict";
 
-/* ---------- seeded PRNG ---------- */
+/* ===================================================================
+   MODEL START — pure data-generation & aggregation logic, no DOM calls.
+   Kept dependency-free so it can be extracted verbatim and executed by
+   the Node test harness in prototipo/test_generador.mjs (see
+   docs/auditoria_metodologica.md, punto 9). Do not reference `document`,
+   `window` or `location` anywhere between this marker and MODEL END.
+   =================================================================== */
+
+/* ---------- seeded PRNG (deterministic, reproducible) ---------- */
 function mulberry32(a){
   return function(){
     a |= 0; a = a + 0x6D2B79F5 | 0;
@@ -319,100 +365,135 @@ function mulberry32(a){
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-const rnd = mulberry32(20261117);
 
-const HORIZON = 24; // months observed
+const HORIZON = 24;          // months simulated, 0-indexed internally (0..23); shown to users as "mes 1".."mes 24"
+const DUE_EVERY = 3;         // PSCV quarterly control schedule assumption (simplification — real periodicity varies by compensation status)
+const MISS_THRESHOLD = 2;    // consecutive missed+unrescued due-controls that define a loss episode
 
-/* ---------- establishments ---------- */
+/* All of the following constants are injected, arbitrary/illustrative
+   assumptions of the generator. None are calibrated against the real
+   sources in docs/catalogo_fuentes.md; see the "Supuestos explícitos"
+   table in the Fuentes tab for the same list rendered in the UI. */
+const ASSUMPTIONS = {
+  spontaneousReengagePerDueMonth: 0.05,   // chance of unprompted return, checked at each due month while lost
+  riskBaselinePerMonth: 0.0025,           // adverse-event risk/month while in continuity (NOT pending rescue) — deliberately non-zero
+  riskPendingPerMonth: 0.01,              // adverse-event risk/month while 1 miss is awaiting rescue
+  riskLostPerMonthFn: 'min(0.35, 0.03 * monthsInEpisode)', // adverse-event risk/month while lost, grows per episode, capped
+  adverseUrgenciaShare: 0.70,             // split of adverse events classified as "urgencia" vs "hospitalizacion"
+  reengagePAfterAdverseWhileLost: 0.60,   // chance an adverse event while lost triggers reengagement
+  minFollowUpForAdjustedLostPct: 12,      // months of possible follow-up required to enter the "ajustada" lost-rate denominator
+};
+
 const ESTAB = [
-  {id:'E1', name:'CESFAM Modelo Norte',    attendance:0.82, rescue:0.52, compensation:0.52},
-  {id:'E2', name:'CESFAM Modelo Centro',   attendance:0.74, rescue:0.42, compensation:0.44},
-  {id:'E3', name:'CESFAM Modelo Oriente',  attendance:0.68, rescue:0.36, compensation:0.38},
-  {id:'E4', name:'CESFAM Modelo Sur',      attendance:0.63, rescue:0.30, compensation:0.34},
-  {id:'E5', name:'CESFAM Modelo Costa',    attendance:0.58, rescue:0.26, compensation:0.30},
-  {id:'E6', name:'CESFAM Modelo Rural',    attendance:0.55, rescue:0.22, compensation:0.27},
+  {id:'E1', name:'Establecimiento ficticio A', attendance:0.82, rescue:0.52, compensation:0.52},
+  {id:'E2', name:'Establecimiento ficticio B', attendance:0.74, rescue:0.42, compensation:0.44},
+  {id:'E3', name:'Establecimiento ficticio C', attendance:0.68, rescue:0.36, compensation:0.38},
+  {id:'E4', name:'Establecimiento ficticio D', attendance:0.63, rescue:0.30, compensation:0.34},
+  {id:'E5', name:'Establecimiento ficticio E', attendance:0.58, rescue:0.26, compensation:0.30},
+  {id:'E6', name:'Establecimiento ficticio F', attendance:0.55, rescue:0.22, compensation:0.27},
 ];
 
-/* ---------- generate synthetic cohort ---------- */
-function genPatients(n){
+/* ---------- generate synthetic cohort ----------
+   Single unified month-by-month loop (m = 0..HORIZON-1) per patient, so
+   that any number of loss episodes, rescues and adverse events can occur
+   and each is evaluated on its own terms — this replaces the earlier
+   two-phase design (a quarterly due-month pass followed by a bolt-on
+   monthly risk pass keyed only to the *last* episode), which under-counted
+   risk during earlier, already-resolved episodes. */
+function genPatients(n, seed){
+  const rnd = mulberry32(seed);
   const patients = [];
   for(let i=0;i<n;i++){
     const est = ESTAB[Math.floor(rnd()*ESTAB.length)];
-    const ingreso = Math.floor(rnd()*19); // 0..18
+    const ingreso = Math.floor(rnd()*(HORIZON-5)); // leaves every patient >=5 months of possible follow-up
     const age = 35 + Math.floor(rnd()*53);
     const sex = rnd() < 0.56 ? 'F' : 'M';
-    const frailty = rnd(); // 0..1 patient-level risk, affects attendance slightly
+    const frailty = rnd();
+    const attendProb = Math.min(0.95, est.attendance + (frailty-0.5)*-0.12);
 
     const events = [{month:ingreso, type:'ingreso'}];
-    let lost = false, lostSince = null, consecutiveMiss = 0, everLost = false, adverseEvent = null, reengaged = false;
+    const adverseEvents = [];
+    let state = 'engaged';   // 'engaged' | 'pending_rescue' | 'lost'
+    let consecutiveMiss = 0;
+    let episodesLost = 0;
+    let monthsInEpisode = 0;
+    let pendingRescueMonth = null;
+    let lastControlCompensado = null;
 
-    const dueMonths = [];
-    for(let m = ingreso; m <= HORIZON-1; m += 3) dueMonths.push(m);
+    for(let m = ingreso; m <= HORIZON-1; m++){
+      const isDueMonth = (m - ingreso) % DUE_EVERY === 0;
 
-    for(const m of dueMonths){
-      if(lost){
-        // small chance of spontaneous return even without an adverse event
-        if(rnd() < 0.05){
-          lost = false; consecutiveMiss = 0;
+      if(state === 'lost'){
+        monthsInEpisode++;
+        if(isDueMonth && rnd() < ASSUMPTIONS.spontaneousReengagePerDueMonth){
+          state = 'engaged'; consecutiveMiss = 0; monthsInEpisode = 0;
           events.push({month:m, type:'reingreso'});
-        } else {
-          continue;
         }
-      }
-      const attendProb = Math.min(0.95, est.attendance + (frailty-0.5)*-0.12);
-      const attended = rnd() < attendProb;
-      if(attended){
-        const compensado = rnd() < est.compensation;
-        events.push({month:m, type:'control', compensado});
-        consecutiveMiss = 0;
-      } else {
-        events.push({month:m, type:'no_asistio'});
-        consecutiveMiss++;
-        const rescueMonth = Math.min(m+1, HORIZON-1);
+      } else if(pendingRescueMonth === m){
         const rescued = rnd() < est.rescue;
-        events.push({month:rescueMonth, type: rescued ? 'rescate_exitoso' : 'rescate_fallido'});
+        events.push({month:m, type: rescued ? 'rescate_exitoso' : 'rescate_fallido'});
+        pendingRescueMonth = null;
         if(rescued){
+          state = 'engaged'; consecutiveMiss = 0;
+        } else if(consecutiveMiss >= MISS_THRESHOLD){
+          state = 'lost'; episodesLost++; monthsInEpisode = 0;
+          events.push({month:m, type:'perdido'});
+        } else {
+          state = 'engaged'; // only 1 miss so far — stays engaged, next due month decides
+        }
+      } else if(isDueMonth && state === 'engaged'){
+        const attended = rnd() < attendProb;
+        if(attended){
+          const compensado = rnd() < est.compensation;
+          lastControlCompensado = compensado;
+          events.push({month:m, type:'control', compensado});
           consecutiveMiss = 0;
-        } else if(consecutiveMiss >= 2){
-          lost = true; everLost = true; lostSince = rescueMonth;
-          events.push({month:rescueMonth, type:'perdido'});
+        } else {
+          events.push({month:m, type:'no_asistio'});
+          consecutiveMiss++;
+          pendingRescueMonth = Math.min(m+1, HORIZON-1);
+          state = 'pending_rescue';
         }
       }
-    }
 
-    // adverse-event risk while lost, month by month to horizon
-    if(lostSince !== null){
-      let monthsLost = 0;
-      for(let m = lostSince+1; m <= HORIZON-1; m++){
-        if(!lost) break;
-        monthsLost++;
-        const risk = Math.min(0.35, 0.03 * monthsLost);
-        if(rnd() < risk){
-          const type = rnd() < 0.7 ? 'urgencia' : 'hospitalizacion';
-          events.push({month:m, type});
-          adverseEvent = type;
-          if(rnd() < 0.6){
-            lost = false; reengaged = true;
-            events.push({month:Math.min(m+1,HORIZON-1), type:'reingreso_post_evento'});
-          }
-          break;
+      // Monthly adverse-event risk — evaluated every month, for every
+      // state, every episode. This is what makes the risk non-tautological:
+      // patients who never lose continuity still carry a (low) nonzero
+      // monthly risk, so "0% among never-lost" is no longer true by
+      // construction; it is now an empirical property of the draw.
+      let risk;
+      if(state === 'lost') risk = Math.min(0.35, 0.03 * monthsInEpisode);
+      else if(state === 'pending_rescue') risk = ASSUMPTIONS.riskPendingPerMonth;
+      else risk = ASSUMPTIONS.riskBaselinePerMonth;
+
+      if(rnd() < risk){
+        const type = rnd() < ASSUMPTIONS.adverseUrgenciaShare ? 'urgencia' : 'hospitalizacion';
+        events.push({month:m, type});
+        adverseEvents.push({month:m, type});
+        if(state === 'lost' && rnd() < ASSUMPTIONS.reengagePAfterAdverseWhileLost){
+          state = 'engaged'; consecutiveMiss = 0; monthsInEpisode = 0;
+          events.push({month:Math.min(m+1,HORIZON-1), type:'reingreso_post_evento'});
         }
       }
     }
 
     events.sort((a,b)=>a.month-b.month);
+    const dueOpportunities = Math.floor((HORIZON-1-ingreso)/DUE_EVERY)+1;
     patients.push({
       id:'P-'+String(i+1).padStart(3,'0'),
-      est, ingreso, age, sex, events,
-      everLost, lostNow: lost, adverseEvent, reengaged
+      est, ingreso, age, sex, events, adverseEvents,
+      everLost: episodesLost>0, episodesLost, lostNow: state==='lost',
+      lastControlCompensado, dueOpportunities,
+      eligibleForAdjustedLostRate: dueOpportunities*DUE_EVERY >= ASSUMPTIONS.minFollowUpForAdjustedLostPct,
     });
   }
   return patients;
 }
 
-const PATIENTS = genPatients(420);
-
-/* ---------- aggregates ---------- */
+/* ---------- aggregates ----------
+   Single shared implementation: used for the whole cohort AND for every
+   establishment subgroup (renderComparisonTable), so every view reads the
+   same numerator/denominator definitions. */
 function computeAggregates(patients){
   const total = patients.length;
   const lostNow = patients.filter(p=>p.lostNow).length;
@@ -426,29 +507,37 @@ function computeAggregates(patients){
       if(e.type==='control'||e.type==='no_asistio') controlesProgramados++;
     });
   });
-  const adverseAmongLost = patients.filter(p=>p.everLost && p.adverseEvent).length;
-  const adverseAmongNotLost = patients.filter(p=>!p.everLost && p.adverseEvent).length;
+  const adverseAmongLost = patients.filter(p=>p.everLost && p.adverseEvents.length>0).length;
+  const adverseAmongNotLost = patients.filter(p=>!p.everLost && p.adverseEvents.length>0).length;
   const notLostCount = total - everLost;
+  const eligibleAdj = patients.filter(p=>p.eligibleForAdjustedLostRate);
+  const lastControlKnown = patients.filter(p=>p.lastControlCompensado!==null);
+
   return {
     total, lostNow, everLost,
-    lostPct: everLost/total,
-    rescueRate: rescExitoso/(rescExitoso+rescFallido || 1),
+    lostPct: everLost/(total||1),
+    lostPctAdjusted: eligibleAdj.length ? eligibleAdj.filter(p=>p.everLost).length/eligibleAdj.length : null,
+    lostPctAdjustedN: eligibleAdj.length,
+    rescueRate: rescExitoso/((rescExitoso+rescFallido) || 1),
+    rescueAttempts: rescExitoso+rescFallido,
     attendanceRate: controlesAsistidos/(controlesProgramados||1),
-    compensationRate: controlesCompensados/(controlesAsistidos||1),
-    adverseTotal: patients.filter(p=>p.adverseEvent).length,
+    controlesProgramados,
+    compensationRateVisits: controlesCompensados/(controlesAsistidos||1),
+    compensationRateLastControl: lastControlKnown.length ? lastControlKnown.filter(p=>p.lastControlCompensado).length/lastControlKnown.length : null,
+    adversePatients: patients.filter(p=>p.adverseEvents.length>0).length,
+    adverseEventsTotal: patients.reduce((s,p)=>s+p.adverseEvents.length,0),
     adverseAmongLostPct: adverseAmongLost/(everLost||1),
     adverseAmongNotLostPct: adverseAmongNotLost/(notLostCount||1),
+    episodeDistribution: patients.reduce((d,p)=>{ d[p.episodesLost]=(d[p.episodesLost]||0)+1; return d; }, {}),
   };
 }
-const AGG = computeAggregates(PATIENTS);
 
-/* ---------- active population per month ---------- */
-function activeByMonth(patients){
-  const arr = new Array(HORIZON).fill(0);
-  for(let m=0;m<HORIZON;m++){
+/* ---------- active population per month (for the sparkline) ---------- */
+function activeByMonth(patients, horizon){
+  const arr = new Array(horizon).fill(0);
+  for(let m=0;m<horizon;m++){
     arr[m] = patients.filter(p=>{
       if(p.ingreso>m) return false;
-      // active if, looking at events up to month m, not currently lost
       let lost=false;
       for(const e of p.events){
         if(e.month>m) break;
@@ -460,9 +549,21 @@ function activeByMonth(patients){
   }
   return arr;
 }
-const ACTIVE_SERIES = activeByMonth(PATIENTS);
 
-/* ===================== rendering helpers ===================== */
+const SEED = 20261117;
+const PATIENTS = genPatients(420, SEED);
+const AGG = computeAggregates(PATIENTS);
+const ACTIVE_SERIES = activeByMonth(PATIENTS, HORIZON);
+
+/* expose for the Node test harness (vm-extracted; harmless in the browser) */
+if(typeof globalThis !== 'undefined'){
+  globalThis.__APS_MODEL__ = { HORIZON, DUE_EVERY, MISS_THRESHOLD, ASSUMPTIONS, ESTAB,
+    mulberry32, genPatients, computeAggregates, activeByMonth, SEED, PATIENTS, AGG, ACTIVE_SERIES };
+}
+/* ===================== MODEL END ===================== */
+
+
+/* ===================== rendering (DOM-dependent) ===================== */
 const svgNS = 'http://www.w3.org/2000/svg';
 function el(tag, attrs, parent){
   const n = document.createElementNS(svgNS, tag);
@@ -471,24 +572,37 @@ function el(tag, attrs, parent){
   return n;
 }
 function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
-function fmtPct(x){ return (x*100).toFixed(0)+'%'; }
+function fmtPct(x){ return x===null ? 's/d' : (x*100).toFixed(1)+'%'; }
+function dm(m){ return m+1; } // internal 0-indexed month -> display month (1..24)
 
 /* ---- KPI cards ---- */
 function renderKPIs(){
   const grid = document.getElementById('kpiGrid');
   const items = [
-    {label:'Población ingresada', value: AGG.total, delta:'cohorte sintética completa'},
-    {label:'Activos ahora (mes 24)', value: AGG.total-AGG.lostNow, delta: fmtPct((AGG.total-AGG.lostNow)/AGG.total)+' del total', cls:'good'},
-    {label:'Perdieron continuidad alguna vez', value: AGG.everLost, delta: fmtPct(AGG.lostPct)+' de la cohorte', cls:'bad'},
-    {label:'Tasa de rescate exitoso', value: fmtPct(AGG.rescueRate), delta:'de los intentos de rescate'},
-    {label:'% controles compensados', value: fmtPct(AGG.compensationRate), delta:'entre quienes asisten', cls: AGG.compensationRate>0.4?'good':'warn'},
-    {label:'Eventos adversos registrados', value: AGG.adverseTotal, delta:'urgencia u hospitalización', cls:'bad'},
+    {label:'Población ingresada', value: AGG.total, def:'N = 420. Universo completo de la cohorte sintética.'},
+    {label:'Activos al mes 24', value: AGG.total-AGG.lostNow, delta: fmtPct((AGG.total-AGG.lostNow)/AGG.total)+' del total', cls:'good',
+      def:'Numerador: no "perdidos" al mes 24. Denominador: 420.'},
+    {label:'Pérdida de continuidad (cruda)', value: fmtPct(AGG.lostPct), delta: AGG.everLost+' de '+AGG.total+' pacientes', cls:'bad',
+      def:'≥1 episodio de pérdida en toda la ventana, sin ajustar por tiempo de seguimiento disponible — ver versión ajustada abajo.'},
+    {label:'Pérdida de continuidad (ajustada)', value: fmtPct(AGG.lostPctAdjusted), delta: 'n='+AGG.lostPctAdjustedN+' con ≥12 meses de seguimiento posible', cls:'warn',
+      def:'Mismo numerador, pero el denominador se restringe a pacientes con suficiente tiempo de seguimiento posible para haber podido perderlo (evita el sesgo de tiempo inmortal de la versión cruda).'},
+    {label:'% cumplimiento de controles', value: fmtPct(AGG.attendanceRate), delta: AGG.controlesProgramados+' controles programados', cls: AGG.attendanceRate>0.7?'good':'warn',
+      def:'Numerador: controles asistidos. Denominador: controles programados (asistidos + no asistidos) mientras el paciente estaba en seguimiento.'},
+    {label:'Tasa de rescate exitoso', value: fmtPct(AGG.rescueRate), delta: AGG.rescueAttempts+' intentos de rescate',
+      def:'Numerador: rescates exitosos. Denominador: todos los intentos de rescate (exitosos + fallidos), cualquier mes de la ventana.'},
+    {label:'% compensados (última visita)', value: fmtPct(AGG.compensationRateLastControl), delta:'por paciente, no por visita', cls: AGG.compensationRateLastControl>0.4?'good':'warn',
+      def:'Indicador a nivel de persona: estado de compensación en el último control asistido por cada paciente — más comparable al indicador REM-P oficial que un promedio por visita.'},
+    {label:'% controles compensados (por visita)', value: fmtPct(AGG.compensationRateVisits), delta:'promedio de todas las visitas',
+      def:'Indicador a nivel de visita: cada control asistido cuenta una vez, así que pacientes con más controles pesan más. No equivale al indicador REM-P oficial (persona, corte transversal).'},
+    {label:'Pacientes con ≥1 evento adverso', value: AGG.adversePatients, delta: AGG.adverseEventsTotal+' eventos en total (urgencia + hospitalización)', cls:'bad',
+      def:'Un paciente puede tener más de un evento; aquí se cuentan personas y, aparte, el total de eventos.'},
   ];
   grid.innerHTML = items.map(it=>`
     <div class="kpi">
       <div class="label">${it.label}</div>
       <div class="value tabular">${it.value}</div>
-      <div class="delta ${it.cls||''}">${it.delta}</div>
+      ${it.delta?`<div class="delta ${it.cls||''}">${it.delta}</div>`:''}
+      <div class="def">${it.def}</div>
     </div>`).join('');
 }
 
@@ -502,17 +616,14 @@ function renderSpark(){
   const y = v => H-padB - ((v-min)/(max-min))*(H-padT-padB);
   const axis = cssVar('--border'), muted = cssVar('--muted'), accent = cssVar('--accent');
 
-  // gridlines
   [0,0.5,1].forEach(f=>{
     const v = max*f;
     el('line',{x1:padL,x2:W-padR,y1:y(v),y2:y(v),stroke:axis,'stroke-width':1},svg);
     el('text',{x:4,y:y(v)+4,fill:muted,'font-size':11},svg).textContent = Math.round(v);
   });
-  // x labels every 6 months
   for(let m=0;m<HORIZON;m+=6){
-    el('text',{x:x(m),y:H-8,fill:muted,'font-size':11,'text-anchor':'middle'},svg).textContent='m'+m;
+    el('text',{x:x(m),y:H-8,fill:muted,'font-size':11,'text-anchor':'middle'},svg).textContent='m'+dm(m);
   }
-  // area + line
   let dLine = '', dArea = '';
   ACTIVE_SERIES.forEach((v,m)=>{
     const px=x(m), py=y(v);
@@ -528,8 +639,8 @@ function renderSpark(){
 function renderRiskCompare(){
   const host = document.getElementById('riskCompare');
   const rows = [
-    {label:'Nunca perdieron continuidad', pct:AGG.adverseAmongNotLostPct, cls:'good'},
-    {label:'Perdieron continuidad alguna vez', pct:AGG.adverseAmongLostPct, cls:'bad'},
+    {label:'Nunca tuvieron un episodio de pérdida', pct:AGG.adverseAmongNotLostPct, cls:'good'},
+    {label:'Tuvieron ≥1 episodio de pérdida', pct:AGG.adverseAmongLostPct, cls:'bad'},
   ];
   host.innerHTML = rows.map(r=>`
     <div style="margin-bottom:12px">
@@ -539,35 +650,38 @@ function renderRiskCompare(){
       <div style="background:var(--surface-2); border-radius:6px; height:10px; overflow:hidden">
         <div style="height:100%; width:${(r.pct*100).toFixed(1)}%; background:var(--${r.cls})"></div>
       </div>
-    </div>`).join('') +
-    `<p class="sub" style="margin-top:4px">% de cada grupo con al menos un evento de urgencia u hospitalización registrado durante la ventana de observación.</p>`;
+    </div>`).join('');
 }
 
-/* ---- funnel ---- */
+/* ---- continuity state (two branches) + episode distribution ---- */
 function renderFunnel(){
   const svg = document.getElementById('funnelSvg');
   svg.innerHTML='';
   const total = AGG.total;
   const conControl = PATIENTS.filter(p=>p.events.some(e=>e.type==='control')).length;
-  const regular = PATIENTS.filter(p=>!p.everLost).length;
-  const rescatadosNoLost = PATIENTS.filter(p=>!p.everLost && p.events.some(e=>e.type==='rescate_exitoso')).length;
+  const regularConControl = PATIENTS.filter(p=>!p.everLost && p.events.some(e=>e.type==='control')).length;
+  const regularRescatado = PATIENTS.filter(p=>!p.everLost && p.events.some(e=>e.type==='rescate_exitoso')).length;
   const perdidos = AGG.everLost;
-  const conEvento = PATIENTS.filter(p=>p.everLost && p.adverseEvent).length;
+  const perdidosConEvento = PATIENTS.filter(p=>p.everLost && p.adverseEvents.length>0).length;
+  const perdidosReenganchados = PATIENTS.filter(p=>p.everLost && !p.lostNow).length;
 
   const stages = [
-    {label:'Ingresados al PSCV', n:total},
-    {label:'Con al menos 1 control asistido', n:conControl},
-    {label:'Continuidad regular (sin pérdida)', n:regular},
-    {label:'  — de ellos, con inasistencia rescatada', n:rescatadosNoLost},
-    {label:'Perdieron seguimiento en algún momento', n:perdidos},
-    {label:'  — con evento adverso posterior', n:conEvento},
+    {label:'Ingresados al PSCV', n:total, group:0},
+    {label:'Con ≥1 control asistido alguna vez', n:conControl, group:0},
+    {label:'Rama A · nunca perdieron seguimiento, con control asistido', n:regularConControl, group:1},
+    {label:'  — de ellos, con ≥1 inasistencia rescatada', n:regularRescatado, group:1},
+    {label:'Rama B · tuvieron ≥1 episodio de pérdida de seguimiento', n:perdidos, group:2},
+    {label:'  — de ellos, reingresaron antes del cierre', n:perdidosReenganchados, group:2},
+    {label:'  — de ellos, con ≥1 evento adverso durante el episodio', n:perdidosConEvento, group:2},
   ];
-  const W=900,H=320, rowH=46, maxW=640, startX=130;
-  const accent = cssVar('--accent'), bad=cssVar('--bad'), muted=cssVar('--muted'), fg=cssVar('--fg');
+  const H=10 + stages.length*46 + 10;
+  svg.setAttribute('viewBox','0 0 900 '+H);
+  const W=900, rowH=46, maxW=560, startX=130;
+  const accent = cssVar('--accent'), bad=cssVar('--bad'), good=cssVar('--good'), muted=cssVar('--muted'), fg=cssVar('--fg');
   stages.forEach((s,i)=>{
     const y = 10 + i*rowH;
     const w = Math.max(6, (s.n/total)*maxW);
-    const color = i>=4 ? bad : accent;
+    const color = s.group===2 ? bad : (s.group===1 ? good : accent);
     const indent = s.label.startsWith('  —');
     el('rect',{x:startX+(indent?20:0), y, width:w-(indent?20:0), height:26, rx:5, fill:color, opacity: indent?0.55:0.85},svg);
     el('text',{x:startX-10, y:y+18, 'text-anchor':'end', fill:fg, 'font-size':13},svg).textContent = s.label.trim();
@@ -575,35 +689,59 @@ function renderFunnel(){
   });
 }
 
-/* ---- establishment comparison table ---- */
+function renderEpisodeTable(){
+  const table = document.getElementById('episodeTable');
+  const dist = AGG.episodeDistribution;
+  const keys = Object.keys(dist).map(Number).sort((a,b)=>a-b);
+  table.innerHTML = `
+    <tr>${keys.map(k=>`<th>${k===0?'0 episodios':k+' episodio'+(k>1?'s':'')}</th>`).join('')}</tr>
+    <tr>${keys.map(k=>`<td class="num tabular">${dist[k]} (${fmtPct(dist[k]/AGG.total)})</td>`).join('')}</tr>
+  `;
+}
+
+/* ---- establishment comparison table (reuses computeAggregates — DRY) ---- */
 function renderComparisonTable(){
   const table = document.getElementById('cmpTable');
   const rows = ESTAB.map(e=>{
     const ps = PATIENTS.filter(p=>p.est.id===e.id);
-    const n = ps.length;
-    const lostPct = ps.filter(p=>p.everLost).length/n;
-    const comp = (()=>{
-      let asis=0, comped=0;
-      ps.forEach(p=>p.events.forEach(ev=>{ if(ev.type==='control'){asis++; if(ev.compensado) comped++;} }));
-      return comped/(asis||1);
-    })();
-    let resc=0, rescTot=0;
-    ps.forEach(p=>p.events.forEach(ev=>{
-      if(ev.type==='rescate_exitoso'){resc++; rescTot++;}
-      if(ev.type==='rescate_fallido'){rescTot++;}
-    }));
-    return {name:e.name, n, lostPct, comp, rescRate: resc/(rescTot||1)};
+    const a = computeAggregates(ps);
+    return {name:e.name, n:ps.length, a};
   });
   table.innerHTML = `
-    <tr><th>Establecimiento (ficticio)</th><th>N pacientes</th><th>% pérdida continuidad</th><th>% compensación HTA</th><th>% rescate exitoso</th></tr>
+    <tr><th>Establecimiento (ficticio)</th><th>N</th><th>% pérdida (cruda)</th><th>% compensación (última visita)</th><th>% rescate exitoso</th></tr>
     ${rows.map(r=>`
       <tr>
         <td>${r.name}</td>
         <td class="num tabular">${r.n}</td>
-        <td class="num tabular">${fmtPct(r.lostPct)}</td>
-        <td class="num tabular">${fmtPct(r.comp)}</td>
-        <td class="num tabular">${fmtPct(r.rescRate)}</td>
+        <td class="num tabular">${fmtPct(r.a.lostPct)}</td>
+        <td class="num tabular">${fmtPct(r.a.compensationRateLastControl)}</td>
+        <td class="num tabular">${fmtPct(r.a.rescueRate)}</td>
       </tr>`).join('')}
+  `;
+  const sumN = rows.reduce((s,r)=>s+r.n,0);
+  if(sumN !== AGG.total){
+    table.insertAdjacentHTML('afterend', `<p class="sub" style="color:var(--bad)">⚠ Inconsistencia: la suma de N por establecimiento (${sumN}) no coincide con el total (${AGG.total}).</p>`);
+  }
+}
+
+function renderAssumptionsTable(){
+  const table = document.getElementById('assumptionsTable');
+  const A = globalThis.__APS_MODEL__.ASSUMPTIONS;
+  const rows = [
+    ['Periodicidad de controles PSCV', 'Cada '+DUE_EVERY+' meses desde el ingreso', 'Simplificación; en PSCV real la periodicidad depende del estado de compensación.'],
+    ['Umbral de pérdida de seguimiento', MISS_THRESHOLD+' controles trimestrales consecutivos no asistidos, con rescate fallido en cada uno', 'Definición operacional elegida por el equipo, no un estándar MINSAL verificado.'],
+    ['Reingreso espontáneo', (A.spontaneousReengagePerDueMonth*100).toFixed(1)+'% por control trimestral mientras está perdido', 'Arbitrario.'],
+    ['Riesgo mensual de evento adverso — en seguimiento', (A.riskBaselinePerMonth*100).toFixed(2)+'%/mes', 'Arbitrario; deliberadamente no-cero para evitar una comparación tautológica contra el grupo perdido.'],
+    ['Riesgo mensual de evento adverso — 1 inasistencia pendiente de rescate', (A.riskPendingPerMonth*100).toFixed(2)+'%/mes', 'Arbitrario.'],
+    ['Riesgo mensual de evento adverso — perdido', A.riskLostPerMonthFn, 'Arbitrario; crece con los meses del episodio, tope 35%/mes.'],
+    ['Reingreso tras evento adverso (estando perdido)', (A.reengagePAfterAdverseWhileLost*100).toFixed(0)+'%', 'Arbitrario.'],
+    ['Tipo de evento adverso', (A.adverseUrgenciaShare*100).toFixed(0)+'% urgencia / '+((1-A.adverseUrgenciaShare)*100).toFixed(0)+'% hospitalización', 'Arbitrario.'],
+    ['Seguimiento mínimo para indicador ajustado', A.minFollowUpForAdjustedLostPct+' meses de seguimiento posible', 'Elegido para reducir (no eliminar) el sesgo de tiempo de seguimiento desigual entre pacientes con ingreso temprano y tardío.'],
+    ['Gradiente de desempeño entre establecimientos', 'Asistencia 55–82%, rescate 22–52%, compensación 27–52%', 'Arbitrario; solo busca que la tabla comparativa tenga variación para probar el filtro, no refleja ninguna brecha real documentada.'],
+  ];
+  table.innerHTML = `
+    <tr><th>Supuesto</th><th>Valor</th><th>Origen / advertencia</th></tr>
+    ${rows.map(r=>`<tr><td>${r[0]}</td><td class="tabular">${r[1]}</td><td style="color:var(--muted); font-size:.82rem">${r[2]}</td></tr>`).join('')}
   `;
 }
 
@@ -614,7 +752,7 @@ const EVENT_META = {
   no_asistio:         {label:'No asistió', color:'--bad'},
   rescate_exitoso:    {label:'Rescate exitoso', color:'--accent2'},
   rescate_fallido:    {label:'Rescate sin éxito', color:'--bad'},
-  perdido:            {label:'Pérdida de seguimiento', color:'--bad'},
+  perdido:            {label:'Inicio de episodio de pérdida', color:'--bad'},
   reingreso:          {label:'Reingreso espontáneo', color:'--good'},
   urgencia:           {label:'Atención de urgencia', color:'--warn'},
   hospitalizacion:    {label:'Hospitalización', color:'--bad'},
@@ -623,9 +761,9 @@ const EVENT_META = {
 
 function patientStatus(p){
   if(p.lostNow) return {k:'perdido', label:'Perdido de seguimiento', cls:'bad'};
-  if(p.adverseEvent) return {k:'evento', label:'Evento adverso registrado', cls:'warn'};
+  if(p.adverseEvents.length>0) return {k:'evento', label:'Con evento adverso registrado', cls:'warn'};
   if(p.events.some(e=>e.type==='rescate_exitoso')) return {k:'rescatado', label:'Rescatado, activo', cls:'accent'};
-  return {k:'activo', label:'Continuidad regular', cls:'good'};
+  return {k:'activo', label:'Sin episodios de pérdida', cls:'good'};
 }
 
 let selectedPatientId = null;
@@ -650,7 +788,7 @@ function renderPatientList(){
   list.innerHTML = filtered.slice(0,150).map(p=>{
     const st = patientStatus(p);
     return `<div class="patient-row ${p.id===selectedPatientId?'active':''}" data-id="${p.id}">
-      <div><div class="pid">${p.id}</div><div class="meta">${p.est.name.replace('CESFAM Modelo ','')} · ${p.age}a · ${p.sex}</div></div>
+      <div><div class="pid">${p.id}</div><div class="meta">${p.est.name.replace('Establecimiento ficticio ','E')} · ${p.age}a · ${p.sex}${p.episodesLost>1?' · '+p.episodesLost+' episodios':''}</div></div>
       <span class="pill ${st.cls}">${st.label}</span>
     </div>`;
   }).join('') || '<div class="sub" style="padding:14px">Sin resultados.</div>';
@@ -670,7 +808,8 @@ function renderTrajectory(){
   document.getElementById('trajHeader').innerHTML = `
     <strong style="font-family:'Space Grotesk',sans-serif; font-size:1.1rem">${p.id}</strong>
     <span class="pill ${st.cls}" style="margin-left:8px">${st.label}</span>
-    <div class="sub" style="margin-top:4px">${p.est.name} · ${p.age} años · ${p.sex==='F'?'Femenino':'Masculino'} · ingresó en el mes ${p.ingreso}</div>
+    ${p.episodesLost>0?`<span class="pill" style="margin-left:6px; background:var(--surface-2); color:var(--muted)">${p.episodesLost} episodio${p.episodesLost>1?'s':''} de pérdida</span>`:''}
+    <div class="sub" style="margin-top:4px">${p.est.name} · ${p.age} años · ${p.sex==='F'?'Femenino':'Masculino'} · ingresó en el mes ${dm(p.ingreso)}</div>
   `;
 
   const svg = document.getElementById('trajSvg');
@@ -681,29 +820,29 @@ function renderTrajectory(){
   const muted = cssVar('--muted');
 
   el('line',{x1:padL,x2:W-padR,y1:midY,y2:midY,stroke:cssVar('--border'),'stroke-width':2},svg);
-  for(let m=0;m<HORIZON;m+=6) el('text',{x:x(m),y:H-8,'text-anchor':'middle',fill:muted,'font-size':11},svg).textContent='mes '+m;
+  for(let m=0;m<HORIZON;m+=6) el('text',{x:x(m),y:H-8,'text-anchor':'middle',fill:muted,'font-size':11},svg).textContent='mes '+dm(m);
 
-  // shade "lost" band if applicable
-  const perdidoEvt = p.events.find(e=>e.type==='perdido');
-  if(perdidoEvt){
-    const endEvt = p.events.find(e=> (e.type==='reingreso'||e.type==='reingreso_post_evento') && e.month>perdidoEvt.month);
+  // shade every "lost" episode band, not just the last one
+  const perdidoEvts = p.events.filter(e=>e.type==='perdido');
+  perdidoEvts.forEach(pe=>{
+    const endEvt = p.events.find(e=> (e.type==='reingreso'||e.type==='reingreso_post_evento') && e.month>pe.month);
     const endM = endEvt ? endEvt.month : HORIZON-1;
-    el('rect',{x:x(perdidoEvt.month), y:padT, width:Math.max(2,x(endM)-x(perdidoEvt.month)), height:H-padT-padB, fill:cssVar('--bad'), opacity:0.08},svg);
-  }
+    el('rect',{x:x(pe.month), y:padT, width:Math.max(2,x(endM)-x(pe.month)), height:H-padT-padB, fill:cssVar('--bad'), opacity:0.08},svg);
+  });
 
   p.events.forEach(e=>{
     const meta = EVENT_META[e.type];
     const color = cssVar(meta.color);
     const cy = (e.type==='control'||e.type==='no_asistio') ? midY : midY + (e.type.includes('rescate')?-26:26);
     const c = el('circle',{cx:x(e.month), cy, r: e.type==='control'||e.type==='no_asistio'?6:5, fill:color},svg);
-    el('title',{},c).textContent = meta.label+' (mes '+e.month+')';
+    el('title',{},c).textContent = meta.label+' (mes '+dm(e.month)+')';
   });
 
   document.getElementById('trajLegend').innerHTML = Object.entries(EVENT_META).map(([k,m])=>
     `<span><span class="dot" style="background:${cssVar(m.color)}"></span>${m.label}</span>`).join('');
 
   document.getElementById('trajChrono').innerHTML = p.events.map(e=>
-    `<li><span class="m">Mes ${e.month}</span><span>${EVENT_META[e.type].label}${e.type==='control'?(e.compensado?' · compensada':' · no compensada'):''}</span></li>`
+    `<li><span class="m">Mes ${dm(e.month)}</span><span>${EVENT_META[e.type].label}${e.type==='control'?(e.compensado?' · compensada':' · no compensada'):''}</span></li>`
   ).join('');
 }
 
@@ -711,21 +850,43 @@ function renderTrajectory(){
 function renderSimulator(){
   const slider = document.getElementById('rescueSlider');
   const toggle = document.getElementById('proactiveToggle');
+  const linkSlider = document.getElementById('linkSlider');
   const baseRescue = AGG.rescueRate;
   const baseLostPct = AGG.lostPct;
-  const baseAdverse = AGG.adverseTotal;
+  const baseAdverse = AGG.adversePatients;
+
+  // Fix: start the slider at the cohort's own realized rescue rate, so the
+  // "no change" position of the control reproduces the baseline exactly
+  // (previously hardcoded to 38%, which did not match the realized ~34%).
+  slider.value = Math.round(baseRescue*100);
+  slider.min = Math.max(5, Math.round(baseRescue*100)-40);
+  slider.max = Math.min(95, Math.round(baseRescue*100)+40);
 
   document.getElementById('simBaseLost').textContent = fmtPct(baseLostPct);
   document.getElementById('simBaseEvt').textContent = baseAdverse;
+  document.getElementById('simCompensation').textContent = fmtPct(AGG.compensationRateLastControl);
 
   function update(){
     const newRescue = +slider.value/100;
+    const linkStrength = +linkSlider.value/100;
     document.getElementById('rescueVal').textContent = Math.round(newRescue*100)+'%';
-    let ratio = (1-newRescue)/(1-baseRescue);
-    if(toggle.checked) ratio *= 0.85;
-    ratio = Math.max(0.15, Math.min(1.6, ratio));
-    const newLostPct = Math.min(0.95, baseLostPct*ratio);
-    const newAdverse = Math.round(baseAdverse*ratio);
+    document.getElementById('linkVal').textContent = linkStrength.toFixed(1).replace('.',',')+'×';
+
+    // Step 1: rescue effectiveness -> projected loss-of-continuity ratio.
+    // This part is a direct, mechanical consequence of this model's own
+    // rescue step, not an external estimate.
+    let lostRatio = (1-newRescue)/(1-baseRescue || 1);
+    if(toggle.checked) lostRatio *= 0.85; // arbitrary extra effect of proactive contact, same as before
+    lostRatio = Math.max(0.15, Math.min(1.6, lostRatio));
+    const newLostPct = Math.min(0.95, baseLostPct*lostRatio);
+
+    // Step 2: projected loss ratio -> projected adverse events, scaled
+    // SEPARATELY by the user-controlled link-strength slider (default 1.0
+    // reproduces the same mechanical scaling the old version hardcoded,
+    // but now it is an explicit, adjustable, clearly-unvalidated assumption
+    // instead of being silently fused with step 1).
+    const adverseRatio = 1 + (lostRatio-1)*linkStrength;
+    const newAdverse = Math.max(0, Math.round(baseAdverse*adverseRatio));
 
     document.getElementById('simNewLost').textContent = fmtPct(newLostPct);
     document.getElementById('simNewEvt').textContent = newAdverse;
@@ -737,9 +898,14 @@ function renderSimulator(){
     const de = document.getElementById('simEvtDelta');
     de.textContent = (evtDelta<=0?'↓ ':'↑ ')+Math.abs(evtDelta)+' vs. actual';
     de.style.color = evtDelta<=0 ? cssVar('--good') : cssVar('--bad');
+
+    document.getElementById('simFormula').textContent =
+      'Pérdida proyectada = pérdida base × (1−rescate nuevo)/(1−rescate base)'+(toggle.checked?' × 0,85 (contacto proactivo)':'')+
+      '. Eventos proyectados = eventos base × [1 + (razón de pérdida − 1) × '+linkStrength.toFixed(1)+']. Con el vínculo en 0×, los eventos proyectados no cambian aunque la pérdida sí lo haga.';
   }
   slider.addEventListener('input', update);
   toggle.addEventListener('change', update);
+  linkSlider.addEventListener('input', update);
   update();
 }
 
@@ -766,7 +932,9 @@ function init(){
   renderSpark();
   renderRiskCompare();
   renderFunnel();
+  renderEpisodeTable();
   renderComparisonTable();
+  renderAssumptionsTable();
   renderPatientFilters();
   renderPatientList();
   document.getElementById('fEst').addEventListener('change', renderPatientList);
